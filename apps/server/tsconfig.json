@@ -1,0 +1,12 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@server/*": ["./src/*"],
+			"@pipeline/*": ["../../packages/pipeline/src/*"]
+		}
+	},
+	"include": ["src/**/*.ts", "tests/**/*.ts"],
+	"exclude": ["node_modules", "dist"]
+}
