@@ -1,0 +1,18 @@
+{
+	"name": "nerdy",
+	"private": true,
+	"workspaces": ["packages/*", "apps/*"],
+	"scripts": {
+		"check": "biome check .",
+		"check:fix": "biome check --write .",
+		"typecheck": "bunx tsc --noEmit",
+		"test": "bun test",
+		"dev:server": "bun --filter @nerdy/server dev",
+		"dev:dashboard": "bun --filter @nerdy/dashboard dev"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.0",
+		"bun-types": "^1.3.10",
+		"typescript": "^5.7.0"
+	}
+}
