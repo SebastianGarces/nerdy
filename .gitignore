@@ -6,3 +6,4 @@ dist/
 data/
 bun.lockb
 *.tsbuildinfo
+.claude/worktrees/

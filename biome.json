@@ -20,7 +20,10 @@
 			"dist",
 			"bun.lockb",
 			"*.sqlite",
-			"drizzle"
+			"drizzle",
+			".agents",
+			".claude",
+			"skills-lock.json"
 		]
 	}
 }
