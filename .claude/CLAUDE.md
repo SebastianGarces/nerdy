@@ -32,6 +32,26 @@ Merge an agent's worktree when ALL pass:
 
 If any fails, the agent must fix or escalate to the orchestrator.
 
+## Submission Documentation
+
+The project is evaluated on documentation quality as much as code. Keep these docs updated continuously — not at the end.
+
+- **`docs/technical-writeup.md`** — 1-2 page system summary (fill in as architecture solidifies).
+- **`docs/ai-tools-used.md`** — Every model, tool, and significant prompt. Update when adding new models or changing prompts.
+- **`docs/limitations.md`** — Honest limitations and failed approaches. Update whenever something doesn't work. The rubric explicitly rewards this.
+- **`decisions/`** — ADRs for every significant choice. Include *what you tried that failed* and *why* you chose the alternative.
+
+### When to Update Docs
+
+| Trigger | Update |
+|---------|--------|
+| New architectural decision | `decisions/` + `docs/technical-writeup.md` |
+| Failed approach or dead end | `docs/limitations.md` + relevant `decisions/` entry |
+| New model or prompt added | `docs/ai-tools-used.md` |
+| Evaluation calibration results | `docs/limitations.md` (accuracy section) |
+| Iteration cycle completed | `docs/technical-writeup.md` (results section) |
+| Quality metrics change | `docs/technical-writeup.md` (results section) |
+
 ## Skills Reference
 
 | Skill | Purpose |

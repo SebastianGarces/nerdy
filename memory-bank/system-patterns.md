@@ -22,3 +22,10 @@ See `decisions/` directory for detailed ADRs.
 - Targeted regeneration on weakest dimension
 - Ad longevity as performance proxy (11.3% survive 60+ days)
 - Performance-per-token as north star metric
+
+## Submission Docs
+- `docs/technical-writeup.md` — 1-2 page summary (update as system evolves)
+- `docs/ai-tools-used.md` — all models, tools, prompts (update on every addition)
+- `docs/limitations.md` — honest limitations + failed approaches (update on failures)
+- `decisions/` — ADRs including failed approaches and reasoning
+- See CLAUDE.md "Submission Documentation" section for update triggers
