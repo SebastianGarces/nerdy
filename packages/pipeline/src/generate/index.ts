@@ -47,6 +47,7 @@ export async function generateAd(
 		llmOverride ??
 		new ChatOpenAI({
 			modelName: MODEL,
+			temperature: 0.7,
 			openAIApiKey: config.openRouterApiKey,
 			configuration: {
 				baseURL: config.openRouterBaseUrl,
@@ -76,10 +77,18 @@ export async function generateAd(
 	// Extract token usage from the response metadata if available
 	// biome-ignore lint/suspicious/noExplicitAny: LangChain response metadata has dynamic shape
 	const resultAny = result as any;
-	const tokens: number =
+	const totalTokens: number =
 		resultAny?.__run?.response_metadata?.tokenUsage?.totalTokens ??
 		resultAny?.__run?.response_metadata?.usage?.total_tokens ??
 		0;
+	const promptTokens: number =
+		resultAny?.__run?.response_metadata?.tokenUsage?.promptTokens ??
+		resultAny?.__run?.response_metadata?.usage?.prompt_tokens ??
+		(totalTokens > 0 ? Math.round(totalTokens * 0.6) : 0);
+	const completionTokens: number =
+		resultAny?.__run?.response_metadata?.tokenUsage?.completionTokens ??
+		resultAny?.__run?.response_metadata?.usage?.completion_tokens ??
+		(totalTokens > 0 ? totalTokens - promptTokens : 0);
 
 	return {
 		id: nanoid(),
@@ -90,7 +99,9 @@ export async function generateAd(
 		callToAction: result.callToAction,
 		metadata: {
 			model: MODEL,
-			tokens: tokens as number,
+			tokens: totalTokens,
+			promptTokens,
+			completionTokens,
 			latencyMs,
 		},
 		iteration,

@@ -1,4 +1,9 @@
-import type { AdBrief, GeneratedAd, PipelineConfig } from "../types/index.js";
+import type {
+	AdBrief,
+	CompetitorAd,
+	GeneratedAd,
+	PipelineConfig,
+} from "../types/index.js";
 import { evaluateAd } from "./index.js";
 
 interface CalibrationEntry {
@@ -40,4 +45,50 @@ export async function calibrateEvaluator(
 	const passed = results.every((r) => r.inRange);
 
 	return { passed, results };
+}
+
+function competitorAdToGeneratedAd(ad: CompetitorAd): GeneratedAd {
+	return {
+		id: ad.id,
+		briefId: "calibration",
+		primaryText: ad.primaryText,
+		headline: ad.headline,
+		description: ad.description,
+		callToAction: "Learn More",
+		metadata: { model: "scraped", tokens: 0, promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+		iteration: 0,
+		status: "published",
+		createdAt: ad.scrapedAt,
+	};
+}
+
+const CALIBRATION_BRIEF: AdBrief = {
+	audience: "parent",
+	product: "Varsity Tutors",
+	campaignGoal: "conversion",
+	emotionalAngle: "aspiration",
+	hookStyle: "question",
+	bodyPattern: "problem-agitate-solution",
+	offerType: "Free consultation",
+	brandVoice: ["empowering", "knowledgeable"],
+};
+
+export async function calibrateFromCompetitorAds(
+	ads: CompetitorAd[],
+	config: PipelineConfig,
+): Promise<CalibrationReport> {
+	const entries: CalibrationEntry[] = ads.map((ad) => {
+		const isVarsityTutors = ad.advertiser
+			.toLowerCase()
+			.includes("varsity tutors");
+		const expectedRange: [number, number] = isVarsityTutors ? [6, 10] : [3, 8];
+
+		return {
+			ad: competitorAdToGeneratedAd(ad),
+			brief: CALIBRATION_BRIEF,
+			expectedRange,
+		};
+	});
+
+	return calibrateEvaluator(entries, config);
 }

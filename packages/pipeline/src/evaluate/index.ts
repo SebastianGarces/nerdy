@@ -46,6 +46,7 @@ export interface LLMInterface {
 function createLLM(config: PipelineConfig): LLMInterface {
 	const model = new ChatOpenAI({
 		modelName: EVALUATOR_MODEL,
+		temperature: 0,
 		configuration: {
 			baseURL: config.openRouterBaseUrl,
 			apiKey: config.openRouterApiKey,

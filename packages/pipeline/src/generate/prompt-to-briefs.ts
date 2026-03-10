@@ -37,6 +37,7 @@ export async function promptToBriefs(
 		options?.llm ??
 		new ChatOpenAI({
 			modelName: MODEL,
+			temperature: 0.8,
 			openAIApiKey: config.openRouterApiKey,
 			configuration: { baseURL: config.openRouterBaseUrl },
 		});

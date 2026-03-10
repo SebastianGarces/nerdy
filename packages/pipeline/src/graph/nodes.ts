@@ -6,6 +6,7 @@ import {
 	evaluations as evaluationsTable,
 	generatedAds,
 	iterationLogs,
+	tokenUsage,
 } from "../db/schema.js";
 import { evaluateAd } from "../evaluate/index.js";
 import type { LLMInterface } from "../evaluate/index.js";
@@ -43,13 +44,34 @@ export function createNodes(
 			description: ad.description,
 			callToAction: ad.callToAction,
 			model: ad.metadata.model,
-			promptTokens: 0,
-			completionTokens: 0,
+			promptTokens: ad.metadata.promptTokens || 0,
+			completionTokens: ad.metadata.completionTokens || 0,
 			latencyMs: ad.metadata.latencyMs,
 			iteration: ad.iteration,
 			status: ad.status,
 			createdAt: ad.createdAt,
 		});
+
+		// Track token usage
+		const totalTokens = ad.metadata.tokens;
+		if (totalTokens > 0) {
+			const promptTokens =
+				ad.metadata.promptTokens || Math.round(totalTokens * 0.6);
+			const completionTokens =
+				ad.metadata.completionTokens || Math.round(totalTokens * 0.4);
+			// OpenRouter Gemini 2.0 Flash: ~$0.10/1M input, ~$0.40/1M output
+			const costUsd = (promptTokens * 0.1 + completionTokens * 0.4) / 1_000_000;
+			await db.insert(tokenUsage).values({
+				id: nanoid(),
+				operation: "generate",
+				model: ad.metadata.model,
+				promptTokens,
+				completionTokens,
+				totalTokens,
+				costUsd,
+				createdAt: new Date().toISOString(),
+			});
+		}
 
 		return {
 			currentAd: ad,
@@ -83,6 +105,25 @@ export function createNodes(
 			tokensUsed: evaluation.tokensUsed,
 			createdAt: evaluation.createdAt,
 		});
+
+		// Track token usage for evaluation
+		const evalTokens = evaluation.tokensUsed;
+		if (evalTokens > 0) {
+			const evalPromptTokens = Math.round(evalTokens * 0.7); // Evaluation has more input
+			const evalCompletionTokens = evalTokens - evalPromptTokens;
+			const costUsd =
+				(evalPromptTokens * 0.1 + evalCompletionTokens * 0.4) / 1_000_000;
+			await db.insert(tokenUsage).values({
+				id: nanoid(),
+				operation: "evaluate",
+				model: evaluation.model,
+				promptTokens: evalPromptTokens,
+				completionTokens: evalCompletionTokens,
+				totalTokens: evalTokens,
+				costUsd,
+				createdAt: new Date().toISOString(),
+			});
+		}
 
 		return {
 			evaluations: [evaluation],
@@ -237,13 +278,33 @@ export function createNodes(
 			description: ad.description,
 			callToAction: ad.callToAction,
 			model: ad.metadata.model,
-			promptTokens: 0,
-			completionTokens: 0,
+			promptTokens: ad.metadata.promptTokens || 0,
+			completionTokens: ad.metadata.completionTokens || 0,
 			latencyMs: ad.metadata.latencyMs,
 			iteration: ad.iteration,
 			status: ad.status,
 			createdAt: ad.createdAt,
 		});
+
+		// Track token usage for regeneration
+		const totalTokens = ad.metadata.tokens;
+		if (totalTokens > 0) {
+			const promptTokens =
+				ad.metadata.promptTokens || Math.round(totalTokens * 0.6);
+			const completionTokens =
+				ad.metadata.completionTokens || Math.round(totalTokens * 0.4);
+			const costUsd = (promptTokens * 0.1 + completionTokens * 0.4) / 1_000_000;
+			await db.insert(tokenUsage).values({
+				id: nanoid(),
+				operation: "regenerate",
+				model: ad.metadata.model,
+				promptTokens,
+				completionTokens,
+				totalTokens,
+				costUsd,
+				createdAt: new Date().toISOString(),
+			});
+		}
 
 		return {
 			currentAd: ad,
