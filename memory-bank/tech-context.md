@@ -7,7 +7,7 @@
 - Framework (frontend): Next.js + Tailwind + shadcn/ui
 - Agent Framework: LangGraph.js
 - Tracing: LangSmith
-- ORM: Drizzle ORM + better-sqlite3
+- ORM: Drizzle ORM + bun:sqlite (switched from better-sqlite3 — native bindings incompatible with Bun)
 - Validation: Zod
 - Linter: Biome (`bun run biome check .`)
 - Type Checker: TypeScript (`bunx tsc --noEmit`)
@@ -30,7 +30,7 @@
 | `@langchain/openai` | OpenAI-compatible SDK (works with OpenRouter) |
 | `langsmith` | Tracing |
 | `drizzle-orm` + `drizzle-kit` | ORM + migrations |
-| `better-sqlite3` | SQLite driver |
+| `bun:sqlite` | SQLite driver (built-in) |
 | `playwright` | Web scraping |
 | `elysia` | Backend HTTP server |
 | `zod` | Schema validation |

@@ -6,11 +6,8 @@
 		"paths": {
 			"@/*": ["./src/*"]
 		},
-		"plugins": [
-			{
-				"name": "next"
-			}
-		],
+		"plugins": [{ "name": "next" }],
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"types": ["react", "react-dom", "node"],
 		"allowJs": true,
 		"incremental": true

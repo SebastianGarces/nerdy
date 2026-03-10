@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
 	const res = await fetch(`${API_URL}${path}`, options);
@@ -112,5 +112,78 @@ export function useTrends() {
 	return useQuery<TrendsResponse>({
 		queryKey: ["trends"],
 		queryFn: () => fetchApi<TrendsResponse>("/api/evaluations/trends"),
+	});
+}
+
+export interface Campaign {
+	id: string;
+	name: string;
+	prompt: string;
+	description: string;
+	status: "generating" | "completed" | "failed";
+	adCount: number;
+	createdAt: string;
+}
+
+interface CampaignsResponse {
+	campaigns: Campaign[];
+}
+
+interface CampaignDetailResponse {
+	campaign: Campaign;
+	briefs: Array<{ id: string; audience: string; campaignGoal: string }>;
+	ads: Ad[];
+	evaluations: Evaluation[];
+}
+
+export function useCampaigns() {
+	return useQuery<CampaignsResponse>({
+		queryKey: ["campaigns"],
+		queryFn: () => fetchApi<CampaignsResponse>("/api/campaigns"),
+	});
+}
+
+export function useCampaign(id: string) {
+	return useQuery<CampaignDetailResponse>({
+		queryKey: ["campaign", id],
+		queryFn: () => fetchApi<CampaignDetailResponse>(`/api/campaigns/${id}`),
+		enabled: !!id,
+		refetchInterval: (query) => {
+			const data = query.state.data;
+			if (data?.campaign.status === "generating") return 3000;
+			return false;
+		},
+	});
+}
+
+export function useCreateCampaign() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (data: { prompt: string; count?: number }) =>
+			fetchApi<{ id: string; status: string }>("/api/campaigns", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(data),
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+		},
+	});
+}
+
+export function useAddCreatives(id: string) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: () =>
+			fetchApi<{ id: string; status: string }>(
+				`/api/campaigns/${id}/generate`,
+				{
+					method: "POST",
+				},
+			),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["campaign", id] });
+			queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+		},
 	});
 }

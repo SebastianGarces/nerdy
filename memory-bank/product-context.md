@@ -11,6 +11,11 @@ An autonomous pipeline that generates ad copy from structured briefs, evaluates 
 - Solo project submission for Gauntlet evaluation
 
 ## User Experience
-- **Pipeline**: CLI or API trigger to generate ads from briefs in batches
-- **Dashboard**: Browse generated ads, view per-ad scores (radar chart), track quality trends over time, see cost/ROI metrics
+- **Campaign creation**: Pomelli-style prompt-driven UI — user describes a campaign in natural language, system generates multiple ad creatives (text now, images later)
+- **Dashboard**: Browse campaigns, view per-ad scores (radar chart), track quality trends, see cost/ROI metrics
+- **Pipeline**: API-triggered generation with user guidance (audience, tone, offer, or freeform prompt)
 - **Scraper**: Manual CLI trigger to scrape competitor ads from Meta Ad Library
+
+## UX Inspiration
+- Google Pomelli: prompt → campaign → creatives gallery with portrait cards
+- Key UX patterns: freeform prompt input, recent campaigns grid, campaign detail with creative cards, "Add Creative" to generate more
