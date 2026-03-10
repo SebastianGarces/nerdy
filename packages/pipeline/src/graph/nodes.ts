@@ -30,6 +30,7 @@ export function createNodes(
 			config: state.config,
 			briefId: state.briefId,
 			llm: options?.generateLlm,
+			campaignPrompt: state.campaignPrompt ?? undefined,
 		});
 
 		await db.insert(generatedAds).values({
@@ -213,6 +214,7 @@ export function createNodes(
 			config: state.config,
 			briefId: state.briefId,
 			llm: options?.generateLlm,
+			campaignPrompt: state.campaignPrompt ?? undefined,
 			context: {
 				previousAd,
 				evaluation: latestEvaluation,

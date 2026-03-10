@@ -26,8 +26,11 @@ Your task is to create compelling Facebook/Instagram ad copy. You must produce:
 
 Always match the requested emotional angle, hook style, and body pattern. Write copy that feels authentic, not generic.`;
 
-export function buildGenerationPrompt(brief: AdBrief): string {
-	return `Create a Facebook/Instagram ad for the following brief:
+export function buildGenerationPrompt(
+	brief: AdBrief,
+	campaignPrompt?: string,
+): string {
+	let prompt = `Create a Facebook/Instagram ad for the following brief:
 
 Audience: ${brief.audience}
 Campaign Goal: ${brief.campaignGoal}
@@ -39,6 +42,12 @@ Brand Voice: ${brief.brandVoice.join(", ")}
 Product: ${brief.product}
 
 Generate ad copy that precisely follows the specified hook style and body pattern while targeting the given audience with the appropriate emotional angle.`;
+
+	if (campaignPrompt) {
+		prompt += `\n\nCAMPAIGN CONTEXT: "${campaignPrompt}"`;
+	}
+
+	return prompt;
 }
 
 export function buildRegenerationPrompt(

@@ -30,6 +30,8 @@ export interface GenerateAdOptions {
 	briefId?: string;
 	/** Optional LLM override for testing */
 	llm?: ChatOpenAI;
+	/** Optional campaign prompt for additional context */
+	campaignPrompt?: string;
 }
 
 const MODEL = "google/gemini-2.0-flash-001";
@@ -60,7 +62,7 @@ export async function generateAd(
 				context.evaluation,
 				context.targetDimension,
 			)
-		: buildGenerationPrompt(brief);
+		: buildGenerationPrompt(brief, options.campaignPrompt);
 
 	const startTime = performance.now();
 

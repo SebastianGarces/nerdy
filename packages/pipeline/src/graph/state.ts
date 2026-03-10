@@ -40,6 +40,10 @@ export const AdPipelineState = Annotation.Root({
 		default: () => "pending" as const,
 	}),
 	config: Annotation<PipelineConfig>,
+	campaignPrompt: Annotation<string | null>({
+		reducer: (_, n) => n,
+		default: () => null,
+	}),
 });
 
 export type AdPipelineStateType = typeof AdPipelineState.State;

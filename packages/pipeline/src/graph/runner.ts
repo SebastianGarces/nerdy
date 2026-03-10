@@ -10,6 +10,7 @@ export interface RunPipelineOptions {
 	concurrency?: number;
 	maxIterations?: number;
 	nodeOptions?: NodeOptions;
+	campaignPrompt?: string;
 }
 
 export async function runPipeline(
@@ -33,6 +34,7 @@ export async function runPipeline(
 		briefId: string;
 		config: PipelineConfig;
 		maxIterations: number;
+		campaignPrompt: string | null;
 	}> = [];
 
 	for (const brief of briefs) {
@@ -55,6 +57,7 @@ export async function runPipeline(
 			briefId,
 			config,
 			maxIterations,
+			campaignPrompt: options?.campaignPrompt ?? null,
 		});
 	}
 

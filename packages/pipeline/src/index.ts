@@ -4,6 +4,7 @@ export * from "./db/schema.js";
 export * from "./generate/index.js";
 export * from "./generate/prompts.js";
 export * from "./generate/briefs.js";
+export * from "./generate/prompt-to-briefs.js";
 export * from "./evaluate/index.js";
 export * from "./iterate/index.js";
 export * from "./graph/index.js";
