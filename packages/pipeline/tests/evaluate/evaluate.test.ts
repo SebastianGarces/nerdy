@@ -36,7 +36,7 @@ const mockAd: GeneratedAd = {
 	callToAction: "Book a Free Session",
 	metadata: { model: "test-model", tokens: 100, latencyMs: 500 },
 	iteration: 1,
-	status: "draft",
+	status: "generating",
 	createdAt: new Date().toISOString(),
 };
 

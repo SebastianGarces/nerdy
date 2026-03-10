@@ -60,7 +60,7 @@ function createTestDb() {
 			completion_tokens INTEGER NOT NULL,
 			latency_ms INTEGER NOT NULL,
 			iteration INTEGER NOT NULL,
-			status TEXT NOT NULL DEFAULT 'draft',
+			status TEXT NOT NULL DEFAULT 'generating',
 			created_at TEXT NOT NULL
 		);
 
@@ -205,7 +205,7 @@ describe("Database schema", () => {
 				completionTokens: 200,
 				latencyMs: 1200,
 				iteration: 1,
-				status: "draft",
+				status: "generating",
 				createdAt: new Date().toISOString(),
 			})
 			.run();
@@ -232,7 +232,7 @@ describe("Database schema", () => {
 					completionTokens: 50,
 					latencyMs: 500,
 					iteration: 1,
-					status: "draft",
+					status: "generating",
 					createdAt: new Date().toISOString(),
 				})
 				.run();
@@ -269,7 +269,7 @@ describe("Database schema", () => {
 				completionTokens: 150,
 				latencyMs: 900,
 				iteration: 1,
-				status: "draft",
+				status: "generating",
 				createdAt: new Date().toISOString(),
 			})
 			.run();
@@ -327,7 +327,7 @@ describe("Database schema", () => {
 				completionTokens: 100,
 				latencyMs: 800,
 				iteration: 1,
-				status: "draft",
+				status: "generating",
 				createdAt: new Date().toISOString(),
 			})
 			.run();

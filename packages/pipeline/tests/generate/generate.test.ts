@@ -104,7 +104,7 @@ const MOCK_PREVIOUS_AD: GeneratedAd = {
 	callToAction: "Learn More",
 	metadata: { model: "test", tokens: 100, latencyMs: 500 },
 	iteration: 1,
-	status: "draft",
+	status: "generating",
 	createdAt: new Date().toISOString(),
 };
 
@@ -123,7 +123,7 @@ describe("generateAd", () => {
 		expect(result.headline).toBe(MOCK_AD_OUTPUT.headline);
 		expect(result.description).toBe(MOCK_AD_OUTPUT.description);
 		expect(result.callToAction).toBe(MOCK_AD_OUTPUT.callToAction);
-		expect(result.status).toBe("draft");
+		expect(result.status).toBe("generating");
 		expect(result.iteration).toBe(1);
 		expect(result.createdAt).toBeString();
 		// Verify ISO date format

@@ -32,7 +32,7 @@ function seedTestData(sqlite: Database) {
 		VALUES ('ad-1', 'brief-1', 'Primary text 1', 'Headline 1', 'Description 1', 'CTA 1', 'gpt-4', 100, 50, 500, 1, 'published', '2026-01-01T00:00:00Z');
 
 		INSERT INTO generated_ads (id, brief_id, primary_text, headline, description, call_to_action, model, prompt_tokens, completion_tokens, latency_ms, iteration, status, created_at)
-		VALUES ('ad-2', 'brief-1', 'Primary text 2', 'Headline 2', 'Description 2', 'CTA 2', 'gpt-4', 100, 50, 500, 2, 'draft', '2026-01-02T00:00:00Z');
+		VALUES ('ad-2', 'brief-1', 'Primary text 2', 'Headline 2', 'Description 2', 'CTA 2', 'gpt-4', 100, 50, 500, 2, 'generating', '2026-01-02T00:00:00Z');
 
 		INSERT INTO evaluations (id, ad_id, dimensions, weighted_score, confidence, model, tokens_used, created_at)
 		VALUES ('eval-1', 'ad-1', '[{"dimension":"clarity","score":8,"rationale":"Clear"}]', 0.8, 0.9, 'gpt-4', 200, '2026-01-01T00:00:00Z');

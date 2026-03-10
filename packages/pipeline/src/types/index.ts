@@ -26,7 +26,7 @@ export const BodyPattern = z.enum([
 ]);
 export type BodyPattern = z.infer<typeof BodyPattern>;
 
-export const AdStatus = z.enum(["draft", "published", "discarded"]);
+export const AdStatus = z.enum(["generating", "published", "discarded"]);
 export type AdStatus = z.infer<typeof AdStatus>;
 
 export const EvaluationDimension = z.enum([

@@ -68,7 +68,7 @@ export const generatedAds = sqliteTable("generated_ads", {
 	completionTokens: integer("completion_tokens").notNull(),
 	latencyMs: integer("latency_ms").notNull(),
 	iteration: integer("iteration").notNull(),
-	status: text("status").notNull().default("draft"),
+	status: text("status").notNull().default("generating"),
 	createdAt: text("created_at").notNull(),
 });
 

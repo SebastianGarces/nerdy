@@ -223,6 +223,12 @@ export function createNodes(
 			},
 		});
 
+		// Mark the superseded ad as discarded
+		await db
+			.update(generatedAds)
+			.set({ status: "discarded" })
+			.where(eq(generatedAds.id, previousAd.id));
+
 		await db.insert(generatedAds).values({
 			id: ad.id,
 			briefId: ad.briefId,

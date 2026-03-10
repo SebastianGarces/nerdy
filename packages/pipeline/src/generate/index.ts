@@ -94,7 +94,7 @@ export async function generateAd(
 			latencyMs,
 		},
 		iteration,
-		status: "draft",
+		status: "generating",
 		createdAt: new Date().toISOString(),
 	};
 }

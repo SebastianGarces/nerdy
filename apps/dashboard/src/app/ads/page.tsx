@@ -6,7 +6,7 @@ import { FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-const statusFilters = ["all", "draft", "published", "discarded"] as const;
+const statusFilters = ["all", "generating", "published", "discarded"] as const;
 
 function StatusBadge({ status }: { status: string }) {
 	return (
@@ -14,7 +14,7 @@ function StatusBadge({ status }: { status: string }) {
 			className={cn(
 				"inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
 				status === "published" && "bg-green-900/50 text-green-300",
-				status === "draft" && "bg-yellow-900/50 text-yellow-300",
+				status === "generating" && "bg-yellow-900/50 text-yellow-300",
 				status === "discarded" && "bg-red-900/50 text-red-300",
 			)}
 		>
