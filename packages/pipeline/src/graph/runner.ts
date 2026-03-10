@@ -12,6 +12,9 @@ export interface RunPipelineOptions {
 	nodeOptions?: NodeOptions;
 	campaignPrompt?: string;
 	campaignId?: string;
+	targetCount?: number;
+	maxRetryRounds?: number;
+	generateMoreBriefs?: (count: number) => Promise<AdBrief[]>;
 }
 
 export async function runPipeline(
@@ -22,53 +25,72 @@ export async function runPipeline(
 ): Promise<AdPipelineStateType[]> {
 	const concurrency = options?.concurrency ?? 3;
 	const maxIterations = options?.maxIterations ?? 3;
+	const targetCount = options?.targetCount;
+	const maxRetryRounds = options?.maxRetryRounds ?? 3;
 
 	const app = createAdPipelineGraph(db, options?.nodeOptions);
+	const allResults: AdPipelineStateType[] = [];
+	let currentBriefs = briefs;
+	let retryRound = 0;
 
-	// Insert briefs into the database and prepare inputs
-	const inputs: Array<{
-		brief: AdBrief;
-		briefId: string;
-		config: PipelineConfig;
-		maxIterations: number;
-		campaignPrompt: string | null;
-	}> = [];
+	while (true) {
+		// Insert briefs into the database and prepare inputs
+		const inputs: Array<{
+			brief: AdBrief;
+			briefId: string;
+			config: PipelineConfig;
+			maxIterations: number;
+			campaignPrompt: string | null;
+		}> = [];
 
-	for (const brief of briefs) {
-		const briefId = nanoid();
-		await db.insert(adBriefs).values({
-			id: briefId,
-			audience: brief.audience,
-			product: brief.product,
-			campaignGoal: brief.campaignGoal,
-			emotionalAngle: brief.emotionalAngle,
-			hookStyle: brief.hookStyle,
-			bodyPattern: brief.bodyPattern,
-			offerType: brief.offerType,
-			brandVoice: JSON.stringify(brief.brandVoice),
-			campaignId: options?.campaignId ?? null,
-			createdAt: new Date().toISOString(),
-		});
+		for (const brief of currentBriefs) {
+			const briefId = nanoid();
+			await db.insert(adBriefs).values({
+				id: briefId,
+				audience: brief.audience,
+				product: brief.product,
+				campaignGoal: brief.campaignGoal,
+				emotionalAngle: brief.emotionalAngle,
+				hookStyle: brief.hookStyle,
+				bodyPattern: brief.bodyPattern,
+				offerType: brief.offerType,
+				brandVoice: JSON.stringify(brief.brandVoice),
+				campaignId: options?.campaignId ?? null,
+				createdAt: new Date().toISOString(),
+			});
 
-		inputs.push({
-			brief,
-			briefId,
-			config,
-			maxIterations,
-			campaignPrompt: options?.campaignPrompt ?? null,
-		});
+			inputs.push({
+				brief,
+				briefId,
+				config,
+				maxIterations,
+				campaignPrompt: options?.campaignPrompt ?? null,
+			});
+		}
+
+		// Process in batches with concurrency limit
+		for (let i = 0; i < inputs.length; i += concurrency) {
+			const batch = inputs.slice(i, i + concurrency);
+			const batchResults = await Promise.all(
+				batch.map((input) => app.invoke(input)),
+			);
+			allResults.push(...batchResults);
+		}
+
+		// If no target count set, single-pass (backwards compatible)
+		if (!targetCount) break;
+
+		const publishedCount = allResults.filter(
+			(r) => r.status === "published",
+		).length;
+		if (publishedCount >= targetCount) break;
+
+		if (retryRound >= maxRetryRounds || !options?.generateMoreBriefs) break;
+		retryRound++;
+
+		const deficit = targetCount - publishedCount;
+		currentBriefs = await options.generateMoreBriefs(deficit);
 	}
 
-	// Process in batches with concurrency limit
-	const results: AdPipelineStateType[] = [];
-
-	for (let i = 0; i < inputs.length; i += concurrency) {
-		const batch = inputs.slice(i, i + concurrency);
-		const batchResults = await Promise.all(
-			batch.map((input) => app.invoke(input)),
-		);
-		results.push(...batchResults);
-	}
-
-	return results;
+	return allResults;
 }

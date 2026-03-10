@@ -52,7 +52,7 @@ export async function promptToBriefs(
 			{ role: "system", content: BRIEF_SYSTEM_PROMPT },
 			{
 				role: "user",
-				content: `Generate ${count} varied ad briefs for this campaign:\n\n"${prompt}"`,
+				content: `Generate ${Math.ceil(count * 1.15)} varied ad briefs for this campaign:\n\n"${prompt}"`,
 			},
 		]);
 		return result.briefs.slice(0, count);

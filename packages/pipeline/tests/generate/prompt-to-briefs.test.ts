@@ -90,6 +90,25 @@ describe("promptToBriefs", () => {
 		}
 	});
 
+	test("over-requests briefs from LLM to buffer for under-generation", async () => {
+		let requestedPrompt = "";
+		const overRequestLlm = {
+			withStructuredOutput: () => ({
+				invoke: async (messages: Array<{ content: string }>) => {
+					requestedPrompt = messages[1]?.content ?? "";
+					return { briefs: mockBriefs };
+				},
+			}),
+		} as unknown as ChatOpenAI;
+
+		await promptToBriefs("Test campaign", 10, MOCK_CONFIG, {
+			llm: overRequestLlm,
+		});
+
+		// Should request ceil(10 * 1.15) = 12 briefs in prompt
+		expect(requestedPrompt).toContain("12");
+	});
+
 	test("respects count parameter", async () => {
 		const result = await promptToBriefs(
 			"Summer tutoring campaign",
