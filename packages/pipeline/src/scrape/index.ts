@@ -3,7 +3,7 @@ import { type Browser, chromium } from "playwright";
 import type { CompetitorAd } from "../types/index.js";
 import { DEFAULT_SCRAPE_CONFIG, buildAdLibraryUrl } from "./config.js";
 import type { ScrapeConfig } from "./config.js";
-import { SELECTORS, parseAdCard } from "./parser.js";
+import { SELECTORS } from "./parser.js";
 
 /**
  * Page type alias for Playwright page instances.
@@ -129,27 +129,34 @@ async function scrapeAdvertiserWithBrowser(
 			previousCount = currentCount;
 		}
 
-		// Extract ad card HTML by walking up from data-testid containers
-		// to their card boundary (the ancestor whose parent is the grid).
-		// Uses evaluate with a function arg to pass the selector; the callback
-		// runs in the browser context so we suppress DOM type checks via casts.
-		const cardHtmls = await page.evaluate(
+		// Extract structured ad data using innerText in the browser context.
+		// The regex-based parser failed on Meta's deeply nested DOM, picking up
+		// UI chrome like "Open Dropdown" instead of actual ad copy. innerText
+		// gives us the visible text in reading order, which we can parse by
+		// known boundary markers (e.g. "See summary details").
+		const extractedCards = await page.evaluate(
 			/* istanbul ignore next -- browser context */
 			(selector) => {
 				const containers = (globalThis as Record<string, unknown>).document as {
 					querySelectorAll(s: string): ArrayLike<unknown>;
 				};
 				const nodes = containers.querySelectorAll(selector);
-				const results: string[] = [];
+				const results: {
+					primaryText: string;
+					headline: string;
+					description: string;
+					startDate: string;
+					platform: string;
+					libraryId: string;
+				}[] = [];
 
 				for (const container of Array.from(nodes)) {
-					// Walk up to find the card boundary — the ancestor whose
-					// parent has many children (the grid container)
+					// Walk up to find the card boundary
 					let el = container as {
 						parentElement: {
 							children: ArrayLike<unknown>;
 						} | null;
-						outerHTML: string;
+						innerText: string;
 					};
 					for (let i = 0; i < 10 && el.parentElement; i++) {
 						if (el.parentElement.children.length > 5) {
@@ -157,7 +164,90 @@ async function scrapeAdvertiserWithBrowser(
 						}
 						el = el.parentElement as unknown as typeof el;
 					}
-					results.push(el.outerHTML);
+
+					const text = el.innerText || "";
+					const lines = text
+						.split("\n")
+						.map((l: string) => l.trim())
+						.filter(Boolean);
+
+					// Extract start date
+					const dateLine = lines.find((l: string) =>
+						l.startsWith("Started running on"),
+					);
+					const startDate = dateLine?.replace("Started running on ", "") || "";
+
+					// Extract Library ID
+					const idLine = lines.find((l: string) => l.startsWith("Library ID:"));
+					const libraryId = idLine?.replace("Library ID: ", "") || "";
+
+					// Find the ad content boundary markers.
+					// The actual ad preview starts after "See summary details"
+					// or "See ad details".
+					const summaryIdx = lines.findIndex(
+						(l: string) =>
+							l === "See summary details" || l === "See ad details",
+					);
+
+					const adContentLines: string[] = [];
+					if (summaryIdx >= 0) {
+						for (let i = summaryIdx + 1; i < lines.length; i++) {
+							adContentLines.push(lines[i] as string);
+						}
+					}
+
+					// Filter out noise from ad content
+					const noise = new Set([
+						"Sponsored",
+						"Learn More",
+						"Sign Up",
+						"Shop Now",
+						"Download",
+						"Book Now",
+						"Contact Us",
+						"Get Offer",
+						"Subscribe",
+						"Watch More",
+						"Apply Now",
+						"Get Quote",
+						"See Menu",
+						"Send Message",
+					]);
+
+					const meaningful = adContentLines.filter(
+						(l: string) =>
+							!noise.has(l) &&
+							!l.startsWith("HTTPS://") &&
+							!l.startsWith("HTTP://") &&
+							l.length > 3,
+					);
+
+					// First meaningful line is the advertiser/page name (skip it).
+					// Second is typically the headline.
+					// Everything after is body copy / primary text.
+					const headline = meaningful[1] || "";
+					const bodyLines = meaningful.slice(2);
+					const primaryText = bodyLines.join("\n");
+
+					// Detect platform from full card text
+					const platforms: string[] = [];
+					if (text.includes("Facebook") || text.includes("facebook"))
+						platforms.push("Facebook");
+					if (text.includes("Instagram") || text.includes("instagram"))
+						platforms.push("Instagram");
+					if (text.includes("Messenger") || text.includes("messenger"))
+						platforms.push("Messenger");
+					if (text.includes("Audience Network"))
+						platforms.push("Audience Network");
+
+					results.push({
+						primaryText,
+						headline,
+						description: "",
+						startDate,
+						platform: platforms.join(", ") || "Facebook",
+						libraryId,
+					});
 				}
 
 				return results;
@@ -166,32 +256,22 @@ async function scrapeAdvertiserWithBrowser(
 		);
 
 		const now = new Date().toISOString();
+		for (const card of extractedCards) {
+			if (!card.headline && !card.primaryText) continue;
 
-		for (let i = 0; i < cardHtmls.length; i++) {
-			try {
-				const cardHtml = cardHtmls[i] as string;
-				const parsed = parseAdCard(cardHtml);
-
-				if (!parsed) continue;
-
-				const durationDays = calculateDurationDays(parsed.startDate);
-
-				ads.push({
-					id: nanoid(),
-					advertiser,
-					primaryText: parsed.primaryText,
-					headline: parsed.headline,
-					description: parsed.description,
-					startDate: parsed.startDate,
-					endDate: "", // Active ads have no end date
-					durationDays,
-					platform: parsed.platform,
-					scrapedAt: now,
-				});
-			} catch (err) {
-				// Skip individual cards that fail to parse
-				console.warn(`[scraper] Failed to parse card ${i}:`, err);
-			}
+			const durationDays = calculateDurationDays(card.startDate);
+			ads.push({
+				id: nanoid(),
+				advertiser,
+				primaryText: card.primaryText,
+				headline: card.headline,
+				description: card.description,
+				startDate: card.startDate,
+				endDate: "",
+				durationDays,
+				platform: card.platform,
+				scrapedAt: now,
+			});
 		}
 	} finally {
 		await context.close();
