@@ -1,3 +1,5 @@
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { setupDatabase } from "./db.js";
@@ -10,6 +12,11 @@ import {
 
 const port = process.env.SERVER_PORT ?? 3001;
 const databaseUrl = process.env.DATABASE_URL ?? "./data/nerdy.sqlite";
+
+// Ensure data directory exists
+if (databaseUrl !== ":memory:" && !databaseUrl.startsWith("file:")) {
+	mkdirSync(dirname(databaseUrl), { recursive: true });
+}
 
 const db = setupDatabase(databaseUrl);
 

@@ -12,19 +12,10 @@ interface PipelineStatusResponse {
 	status: string;
 }
 
-// Mock the pipeline functions to avoid actual API calls
+// Mock only runPipeline to avoid actual API calls while keeping real generateBriefs
+const realPipeline = await import("@nerdy/pipeline");
 mock.module("@nerdy/pipeline", () => ({
-	generateBriefs: (count: number) =>
-		Array.from({ length: count }, () => ({
-			audience: "parent",
-			product: "Varsity Tutors",
-			campaignGoal: "conversion",
-			emotionalAngle: "aspiration",
-			hookStyle: "question",
-			bodyPattern: "problem-agitate-solution",
-			offerType: "Free consultation",
-			brandVoice: ["empowering"],
-		})),
+	...realPipeline,
 	runPipeline: async () => [],
 }));
 
