@@ -5,11 +5,11 @@ import { Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const COUNT_OPTIONS = [1, 3, 5, 10];
+const COUNT_OPTIONS = [5, 10, 25, 50];
 
 export function PromptInput() {
 	const [prompt, setPrompt] = useState("");
-	const [count, setCount] = useState(3);
+	const [count, setCount] = useState(10);
 	const router = useRouter();
 	const mutation = useCreateCampaign();
 
