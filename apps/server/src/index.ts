@@ -6,6 +6,7 @@ import { setupDatabase } from "./db.js";
 import {
 	adRoutes,
 	briefRoutes,
+	campaignRoutes,
 	evaluationRoutes,
 	pipelineRoutes,
 } from "./routes/index.js";
@@ -27,6 +28,7 @@ const app = new Elysia()
 	.use(briefRoutes(db))
 	.use(evaluationRoutes(db))
 	.use(pipelineRoutes())
+	.use(campaignRoutes(db))
 	.listen(port);
 
 console.log(`Server running at http://localhost:${port}`);
