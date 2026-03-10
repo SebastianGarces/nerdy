@@ -14,7 +14,6 @@ import type {
 const mockConfig: PipelineConfig = {
 	openRouterApiKey: "test-key",
 	openRouterBaseUrl: "https://openrouter.ai/api/v1",
-	databaseUrl: ":memory:",
 };
 
 const mockBrief: AdBrief = {

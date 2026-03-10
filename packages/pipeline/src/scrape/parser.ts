@@ -26,7 +26,7 @@ export const SELECTORS = {
 	/** Container for each individual ad card - uses stable data-testid */
 	adCard: '[data-testid="ad-library-dynamic-content-container"]',
 	/** Fallback: broader container selector (valid native CSS) */
-	adCardFallback: 'div[class] > div[class] > div[class]',
+	adCardFallback: "div[class] > div[class] > div[class]",
 } as const;
 
 /**

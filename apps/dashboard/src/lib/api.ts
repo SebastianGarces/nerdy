@@ -62,9 +62,29 @@ interface AdsResponse {
 	total: number;
 }
 
+export interface IterationEntry {
+	ad: Ad;
+	evaluation: Evaluation | null;
+}
+
+export interface IterationLog {
+	id: string;
+	briefId: string;
+	iteration: number;
+	adId: string;
+	evaluationId: string;
+	weakestDimension: string;
+	action: string;
+	scoreBefore: number;
+	scoreAfter: number;
+	createdAt: string;
+}
+
 interface AdDetailResponse {
 	ad: Ad;
 	evaluations: Evaluation[];
+	iterations: IterationEntry[];
+	iterationLogs: IterationLog[];
 }
 
 interface StatsResponse extends Stats {}

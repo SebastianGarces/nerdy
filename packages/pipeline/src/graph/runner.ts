@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { createDb } from "../db/index.js";
+import type { createDb } from "../db/index.js";
 import { adBriefs } from "../db/schema.js";
 import type { AdBrief, PipelineConfig } from "../types/index.js";
 import { createAdPipelineGraph } from "./index.js";
@@ -11,20 +11,17 @@ export interface RunPipelineOptions {
 	maxIterations?: number;
 	nodeOptions?: NodeOptions;
 	campaignPrompt?: string;
+	campaignId?: string;
 }
 
 export async function runPipeline(
 	briefs: AdBrief[],
 	config: PipelineConfig,
+	db: ReturnType<typeof createDb>,
 	options?: RunPipelineOptions,
 ): Promise<AdPipelineStateType[]> {
 	const concurrency = options?.concurrency ?? 3;
 	const maxIterations = options?.maxIterations ?? 3;
-
-	const db = createDb(config.databaseUrl);
-
-	// Ensure tables exist by running pragmas (for in-memory DBs, tables are created by Drizzle push)
-	// For production, migrations should be run separately
 
 	const app = createAdPipelineGraph(db, options?.nodeOptions);
 
@@ -49,6 +46,7 @@ export async function runPipeline(
 			bodyPattern: brief.bodyPattern,
 			offerType: brief.offerType,
 			brandVoice: JSON.stringify(brief.brandVoice),
+			campaignId: options?.campaignId ?? null,
 			createdAt: new Date().toISOString(),
 		});
 

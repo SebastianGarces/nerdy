@@ -1,5 +1,6 @@
 "use client";
 
+import { IterationTimeline } from "@/components/ui/iteration-timeline";
 import { DimensionRadarChart } from "@/components/ui/radar-chart";
 import { useAd } from "@/lib/api";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -27,7 +28,7 @@ export default function AdDetailPage() {
 		);
 	}
 
-	const { ad, evaluations } = data;
+	const { ad, evaluations, iterations, iterationLogs } = data;
 	const latestEval = evaluations.length > 0 ? evaluations[0] : null;
 
 	return (
@@ -49,8 +50,8 @@ export default function AdDetailPage() {
 			</div>
 
 			<div className="grid gap-8 lg:grid-cols-2">
-				<div className="space-y-6">
-					<div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+				<div className="flex flex-col gap-6">
+					<div className="flex-1 rounded-xl border border-neutral-800 bg-neutral-900 p-6">
 						<h2 className="mb-4 text-lg font-semibold">Ad Copy</h2>
 						<div className="space-y-4">
 							<div>
@@ -103,30 +104,6 @@ export default function AdDetailPage() {
 						</div>
 					)}
 
-					{evaluations.length > 1 && (
-						<div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-							<h2 className="mb-4 text-lg font-semibold">Iteration History</h2>
-							<div className="space-y-3">
-								{evaluations.map((evaluation, idx) => (
-									<div
-										key={evaluation.id}
-										className="flex items-center justify-between rounded-lg border border-neutral-800 px-4 py-3"
-									>
-										<span className="text-sm text-neutral-400">
-											Eval #{evaluations.length - idx}
-										</span>
-										<span className="font-medium text-neutral-200">
-											{evaluation.weightedScore.toFixed(2)}
-										</span>
-										<span className="text-xs text-neutral-500">
-											{new Date(evaluation.createdAt).toLocaleDateString()}
-										</span>
-									</div>
-								))}
-							</div>
-						</div>
-					)}
-
 					{!latestEval && (
 						<div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 text-center text-neutral-500">
 							No evaluations yet
@@ -134,6 +111,14 @@ export default function AdDetailPage() {
 					)}
 				</div>
 			</div>
+
+			{iterations.length > 1 && (
+				<IterationTimeline
+					currentIteration={ad.iteration}
+					iterations={iterations}
+					iterationLogs={iterationLogs}
+				/>
+			)}
 		</div>
 	);
 }

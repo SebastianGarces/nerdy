@@ -34,7 +34,6 @@ const mockBrief: AdBrief = {
 const mockConfig: PipelineConfig = {
 	openRouterApiKey: "test-key",
 	openRouterBaseUrl: "https://openrouter.ai/api/v1",
-	databaseUrl: ":memory:",
 };
 
 function makeDimensions(baseScore: number): Array<{
@@ -133,7 +132,7 @@ describe("Ad Pipeline Graph", () => {
 			.run();
 	}
 
-	it("publishes on first try when score >= 7.0", async () => {
+	it("publishes on first try when score >= 7.5", async () => {
 		const briefId = nanoid();
 		insertBrief(briefId);
 
@@ -164,6 +163,27 @@ describe("Ad Pipeline Graph", () => {
 		const logs = db.select().from(schema.iterationLogs).all();
 		expect(logs).toHaveLength(1);
 		expect(logs[0]?.action).toBe("publish");
+	});
+
+	it("requires iteration when score is 7.0 (below threshold)", async () => {
+		const briefId = nanoid();
+		insertBrief(briefId);
+
+		const graph = createAdPipelineGraph(db, {
+			generateLlm: createMockGenerateLlm(),
+			evaluateLlm: createMockEvaluateLlm([7, 8]),
+		});
+
+		const result = await graph.invoke({
+			brief: mockBrief,
+			briefId,
+			config: mockConfig,
+			maxIterations: 3,
+		});
+
+		expect(result.status).toBe("published");
+		expect(result.iterationCount).toBe(2);
+		expect(result.evaluations).toHaveLength(2);
 	});
 
 	it("iterates and publishes when second attempt passes", async () => {

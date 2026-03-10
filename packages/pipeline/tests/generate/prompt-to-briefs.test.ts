@@ -6,7 +6,6 @@ import { type AdBrief, AdBriefSchema } from "../../src/types/index.js";
 const MOCK_CONFIG = {
 	openRouterApiKey: "test-key",
 	openRouterBaseUrl: "https://test.example.com/v1",
-	databaseUrl: ":memory:",
 };
 
 const mockBriefs: AdBrief[] = [

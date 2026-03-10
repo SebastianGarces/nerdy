@@ -26,7 +26,6 @@ const MOCK_BRIEF: AdBrief = {
 const MOCK_CONFIG = {
 	openRouterApiKey: "test-key",
 	openRouterBaseUrl: "https://test.example.com/v1",
-	databaseUrl: ":memory:",
 };
 
 const MOCK_AD_OUTPUT = {

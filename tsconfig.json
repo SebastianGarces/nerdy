@@ -15,5 +15,5 @@
 		"lib": ["ESNext"],
 		"types": ["bun-types"]
 	},
-	"exclude": ["node_modules", "dist", ".next"]
+	"exclude": ["node_modules", "dist", ".next", "apps/dashboard"]
 }

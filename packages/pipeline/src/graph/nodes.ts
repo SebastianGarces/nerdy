@@ -13,6 +13,8 @@ import { generateAd } from "../generate/index.js";
 import { diagnoseWeakness, shouldRetry } from "../iterate/index.js";
 import type { AdPipelineStateType } from "./state.js";
 
+export const QUALITY_THRESHOLD = 7.5;
+
 export interface NodeOptions {
 	generateLlm?: ChatOpenAI;
 	evaluateLlm?: LLMInterface;
@@ -94,8 +96,6 @@ export function createNodes(
 		if (!latestEvaluation) {
 			throw new Error("No evaluation to decide on");
 		}
-
-		const QUALITY_THRESHOLD = 7.0;
 
 		if (latestEvaluation.weightedScore >= QUALITY_THRESHOLD) {
 			return { status: "published" };

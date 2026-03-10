@@ -27,7 +27,7 @@ const app = new Elysia()
 	.use(adRoutes(db))
 	.use(briefRoutes(db))
 	.use(evaluationRoutes(db))
-	.use(pipelineRoutes())
+	.use(pipelineRoutes(db))
 	.use(campaignRoutes(db))
 	.listen(port);
 

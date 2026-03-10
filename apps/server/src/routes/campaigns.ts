@@ -2,8 +2,8 @@ import {
 	adBriefs,
 	campaigns,
 	evaluations,
-	generateBriefs,
 	generatedAds,
+	promptToBriefs,
 	runPipeline,
 } from "@nerdy/pipeline";
 import type { PipelineConfig } from "@nerdy/pipeline";
@@ -31,37 +31,19 @@ export function campaignRoutes(db: AppDatabase) {
 					createdAt: new Date().toISOString(),
 				});
 
-				// Generate briefs (using matrix for now; promptToBriefs will be integrated after merge)
-				const briefs = generateBriefs(count);
-
-				// Insert briefs with campaignId
-				for (const brief of briefs) {
-					const briefId = nanoid();
-					await db.insert(adBriefs).values({
-						id: briefId,
-						audience: brief.audience,
-						product: brief.product,
-						campaignGoal: brief.campaignGoal,
-						emotionalAngle: brief.emotionalAngle,
-						hookStyle: brief.hookStyle,
-						bodyPattern: brief.bodyPattern,
-						offerType: brief.offerType,
-						brandVoice: JSON.stringify(brief.brandVoice),
-						campaignId,
-						createdAt: new Date().toISOString(),
-					});
-				}
-
 				// Get pipeline config
 				const config: PipelineConfig = {
 					openRouterApiKey: process.env.OPENROUTER_API_KEY ?? "",
 					openRouterBaseUrl:
 						process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
-					databaseUrl: process.env.DATABASE_URL ?? "./data/nerdy.sqlite",
 				};
 
+				// Generate briefs from prompt via LLM
+				const briefs = await promptToBriefs(prompt, count, config);
+
 				// Run pipeline in background (fire-and-forget)
-				runPipeline(briefs, config)
+				// Pipeline runner inserts briefs with campaignId
+				runPipeline(briefs, config, db, { campaignId })
 					.then(async () => {
 						await db
 							.update(campaigns)
@@ -176,25 +158,15 @@ export function campaignRoutes(db: AppDatabase) {
 				}
 
 				const count = campaign.adCount;
-				const briefs = generateBriefs(count);
 
-				// Insert new briefs with campaignId
-				for (const brief of briefs) {
-					const briefId = nanoid();
-					await db.insert(adBriefs).values({
-						id: briefId,
-						audience: brief.audience,
-						product: brief.product,
-						campaignGoal: brief.campaignGoal,
-						emotionalAngle: brief.emotionalAngle,
-						hookStyle: brief.hookStyle,
-						bodyPattern: brief.bodyPattern,
-						offerType: brief.offerType,
-						brandVoice: JSON.stringify(brief.brandVoice),
-						campaignId: params.id,
-						createdAt: new Date().toISOString(),
-					});
-				}
+				const config: PipelineConfig = {
+					openRouterApiKey: process.env.OPENROUTER_API_KEY ?? "",
+					openRouterBaseUrl:
+						process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
+				};
+
+				// Generate briefs from prompt via LLM
+				const briefs = await promptToBriefs(campaign.prompt, count, config);
 
 				// Update status
 				await db
@@ -202,14 +174,8 @@ export function campaignRoutes(db: AppDatabase) {
 					.set({ status: "generating" })
 					.where(eq(campaigns.id, params.id));
 
-				const config: PipelineConfig = {
-					openRouterApiKey: process.env.OPENROUTER_API_KEY ?? "",
-					openRouterBaseUrl:
-						process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
-					databaseUrl: process.env.DATABASE_URL ?? "./data/nerdy.sqlite",
-				};
-
-				runPipeline(briefs, config)
+				// Pipeline runner inserts briefs with campaignId
+				runPipeline(briefs, config, db, { campaignId: params.id })
 					.then(async () => {
 						await db
 							.update(campaigns)

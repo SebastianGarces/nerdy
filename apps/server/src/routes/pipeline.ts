@@ -2,8 +2,9 @@ import { generateBriefs, runPipeline } from "@nerdy/pipeline";
 import type { AdBrief, PipelineConfig } from "@nerdy/pipeline";
 import { Elysia, t } from "elysia";
 import { nanoid } from "nanoid";
+import type { AppDatabase } from "../db.js";
 
-export function pipelineRoutes() {
+export function pipelineRoutes(db: AppDatabase) {
 	const jobs = new Map<
 		string,
 		{
@@ -31,13 +32,12 @@ export function pipelineRoutes() {
 					openRouterApiKey: process.env.OPENROUTER_API_KEY ?? "",
 					openRouterBaseUrl:
 						process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
-					databaseUrl: process.env.DATABASE_URL ?? "./data/nerdy.sqlite",
 				};
 
 				jobs.set(jobId, { status: "started" });
 
 				// Run pipeline in background (fire-and-forget)
-				runPipeline(briefs, config)
+				runPipeline(briefs, config, db)
 					.then((result) => {
 						jobs.set(jobId, { status: "completed", result });
 					})

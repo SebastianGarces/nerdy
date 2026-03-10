@@ -101,7 +101,6 @@ export interface Campaign {
 export interface PipelineConfig {
 	openRouterApiKey: string;
 	openRouterBaseUrl: string;
-	databaseUrl: string;
 }
 
 export interface AdBrief extends z.infer<typeof AdBriefSchema> {}

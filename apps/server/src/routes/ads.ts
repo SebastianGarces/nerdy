@@ -1,5 +1,5 @@
-import { evaluations, generatedAds } from "@nerdy/pipeline";
-import { eq, sql } from "drizzle-orm";
+import { evaluations, generatedAds, iterationLogs } from "@nerdy/pipeline";
+import { asc, eq, sql } from "drizzle-orm";
 import { Elysia, t } from "elysia";
 import type { AppDatabase } from "../db.js";
 
@@ -62,9 +62,39 @@ export function adRoutes(db: AppDatabase) {
 					dimensions: JSON.parse(evalRow.dimensions) as unknown[],
 				}));
 
+				// Fetch sibling ads (same brief) with their evaluations, ordered by iteration
+				const siblings = await db
+					.select({
+						ad: generatedAds,
+						evaluation: evaluations,
+					})
+					.from(generatedAds)
+					.leftJoin(evaluations, eq(evaluations.adId, generatedAds.id))
+					.where(eq(generatedAds.briefId, ad.briefId))
+					.orderBy(asc(generatedAds.iteration));
+
+				const iterations = siblings.map((row) => ({
+					ad: row.ad,
+					evaluation: row.evaluation
+						? {
+								...row.evaluation,
+								dimensions: JSON.parse(row.evaluation.dimensions) as unknown[],
+							}
+						: null,
+				}));
+
+				// Fetch iteration logs for this brief
+				const logs = await db
+					.select()
+					.from(iterationLogs)
+					.where(eq(iterationLogs.briefId, ad.briefId))
+					.orderBy(asc(iterationLogs.iteration));
+
 				return {
 					ad,
 					evaluations: parsedEvaluations,
+					iterations,
+					iterationLogs: logs,
 				};
 			},
 			{
