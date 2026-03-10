@@ -8,7 +8,9 @@
 		"typecheck": "bunx tsc -p packages/pipeline/tsconfig.json --noEmit && bunx tsc -p apps/server/tsconfig.json --noEmit && bunx tsc -p apps/dashboard/tsconfig.json --noEmit",
 		"test": "bun test",
 		"dev:server": "bun --filter @nerdy/server dev",
-		"dev:dashboard": "bun --filter @nerdy/dashboard dev"
+		"dev:dashboard": "bun --filter @nerdy/dashboard dev",
+		"scrape": "bun run packages/pipeline/src/scrape/cli.ts",
+		"scrape:all": "bun run packages/pipeline/src/scrape/cli.ts --all"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.0",
