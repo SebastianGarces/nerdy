@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
 	AdBriefSchema,
+	CampaignSchema,
 	DimensionScoreSchema,
 	EvaluationOutputSchema,
 	GeneratedAdOutputSchema,
@@ -198,6 +199,43 @@ describe("GeneratedAdOutputSchema", () => {
 			headline: "",
 			description: "AI-powered tutoring for K-12",
 			callToAction: "Start Free Trial",
+		});
+		expect(result.success).toBe(false);
+	});
+});
+
+describe("CampaignSchema", () => {
+	const validCampaign = {
+		name: "Summer Campaign",
+		prompt: "Create ads for summer sale",
+		description: "A summer promotional campaign",
+		status: "generating" as const,
+		adCount: 0,
+	};
+
+	test("accepts valid campaign", () => {
+		const result = CampaignSchema.safeParse(validCampaign);
+		expect(result.success).toBe(true);
+	});
+
+	test("rejects missing name", () => {
+		const { name: _, ...rest } = validCampaign;
+		const result = CampaignSchema.safeParse(rest);
+		expect(result.success).toBe(false);
+	});
+
+	test("rejects invalid status", () => {
+		const result = CampaignSchema.safeParse({
+			...validCampaign,
+			status: "invalid",
+		});
+		expect(result.success).toBe(false);
+	});
+
+	test("rejects negative adCount", () => {
+		const result = CampaignSchema.safeParse({
+			...validCampaign,
+			adCount: -1,
 		});
 		expect(result.success).toBe(false);
 	});

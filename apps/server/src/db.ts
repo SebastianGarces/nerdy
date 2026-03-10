@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite";
 import {
 	adBriefs,
+	campaigns,
 	competitorAds,
 	evaluations,
 	generatedAds,
@@ -10,6 +11,7 @@ import {
 import { drizzle } from "drizzle-orm/bun-sqlite";
 
 const schema = {
+	campaigns,
 	competitorAds,
 	adBriefs,
 	generatedAds,
@@ -19,6 +21,16 @@ const schema = {
 };
 
 const CREATE_TABLES_SQL = `
+CREATE TABLE IF NOT EXISTS campaigns (
+	id TEXT PRIMARY KEY,
+	name TEXT NOT NULL,
+	prompt TEXT NOT NULL,
+	description TEXT NOT NULL,
+	status TEXT NOT NULL DEFAULT 'generating',
+	ad_count INTEGER NOT NULL DEFAULT 0,
+	created_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS competitor_ads (
 	id TEXT PRIMARY KEY,
 	advertiser TEXT NOT NULL,
@@ -42,6 +54,7 @@ CREATE TABLE IF NOT EXISTS ad_briefs (
 	body_pattern TEXT NOT NULL,
 	offer_type TEXT NOT NULL,
 	brand_voice TEXT NOT NULL,
+	campaign_id TEXT REFERENCES campaigns(id),
 	created_at TEXT NOT NULL
 );
 

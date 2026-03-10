@@ -44,6 +44,17 @@ export type IterationAction = z.infer<typeof IterationAction>;
 export const TokenOperation = z.enum(["generate", "evaluate", "diagnose"]);
 export type TokenOperation = z.infer<typeof TokenOperation>;
 
+export const CampaignStatus = z.enum(["generating", "completed", "failed"]);
+export type CampaignStatus = z.infer<typeof CampaignStatus>;
+
+export const CampaignSchema = z.object({
+	name: z.string().min(1),
+	prompt: z.string().min(1),
+	description: z.string().min(1),
+	status: CampaignStatus,
+	adCount: z.number().int().min(0),
+});
+
 // ── Zod Schemas ────────────────────────────────────────────────────────────
 
 export const AdBriefSchema = z.object({
@@ -76,6 +87,16 @@ export const GeneratedAdOutputSchema = z.object({
 });
 
 // ── Interfaces ─────────────────────────────────────────────────────────────
+
+export interface Campaign {
+	id: string;
+	name: string;
+	prompt: string;
+	description: string;
+	status: CampaignStatus;
+	adCount: number;
+	createdAt: string;
+}
 
 export interface PipelineConfig {
 	openRouterApiKey: string;

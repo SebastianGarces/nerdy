@@ -18,6 +18,20 @@ export const competitorAds = sqliteTable("competitor_ads", {
 	scrapedAt: text("scraped_at").notNull(),
 });
 
+// ── campaigns ─────────────────────────────────────────────────────────────
+
+export const campaigns = sqliteTable("campaigns", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => nanoid()),
+	name: text("name").notNull(),
+	prompt: text("prompt").notNull(),
+	description: text("description").notNull(),
+	status: text("status").notNull().default("generating"),
+	adCount: integer("ad_count").notNull().default(0),
+	createdAt: text("created_at").notNull(),
+});
+
 // ── ad_briefs ──────────────────────────────────────────────────────────────
 
 export const adBriefs = sqliteTable("ad_briefs", {
@@ -32,6 +46,7 @@ export const adBriefs = sqliteTable("ad_briefs", {
 	bodyPattern: text("body_pattern").notNull(),
 	offerType: text("offer_type").notNull(),
 	brandVoice: text("brand_voice").notNull(), // JSON stringified string[]
+	campaignId: text("campaign_id").references(() => campaigns.id),
 	createdAt: text("created_at").notNull(),
 });
 

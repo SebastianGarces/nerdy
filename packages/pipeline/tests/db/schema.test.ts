@@ -11,6 +11,16 @@ function createTestDb() {
 
 	// Create all tables manually for in-memory testing
 	sqlite.exec(`
+		CREATE TABLE campaigns (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			prompt TEXT NOT NULL,
+			description TEXT NOT NULL,
+			status TEXT NOT NULL DEFAULT 'generating',
+			ad_count INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL
+		);
+
 		CREATE TABLE competitor_ads (
 			id TEXT PRIMARY KEY,
 			advertiser TEXT NOT NULL,
@@ -34,6 +44,7 @@ function createTestDb() {
 			body_pattern TEXT NOT NULL,
 			offer_type TEXT NOT NULL,
 			brand_voice TEXT NOT NULL,
+			campaign_id TEXT REFERENCES campaigns(id),
 			created_at TEXT NOT NULL
 		);
 
@@ -93,7 +104,7 @@ function createTestDb() {
 }
 
 describe("Database schema", () => {
-	test("all 6 tables exist", () => {
+	test("all 7 tables exist", () => {
 		const { sqlite } = createTestDb();
 		const tables = sqlite
 			.prepare(
@@ -101,6 +112,7 @@ describe("Database schema", () => {
 			)
 			.all() as { name: string }[];
 		const tableNames = tables.map((t) => t.name);
+		expect(tableNames).toContain("campaigns");
 		expect(tableNames).toContain("competitor_ads");
 		expect(tableNames).toContain("ad_briefs");
 		expect(tableNames).toContain("generated_ads");
@@ -373,5 +385,79 @@ describe("Database schema", () => {
 		expect(rows).toHaveLength(1);
 		expect(rows[0]?.totalTokens).toBe(1500);
 		expect(rows[0]?.costUsd).toBeCloseTo(0.045);
+	});
+
+	test("campaigns table exists", () => {
+		const { sqlite } = createTestDb();
+		const tables = sqlite
+			.prepare(
+				"SELECT name FROM sqlite_master WHERE type='table' AND name='campaigns'",
+			)
+			.all() as { name: string }[];
+		expect(tables).toHaveLength(1);
+	});
+
+	test("insert and query campaigns", () => {
+		const { db } = createTestDb();
+		db.insert(schema.campaigns)
+			.values({
+				id: "camp-1",
+				name: "Summer Campaign",
+				prompt: "Create ads for summer sale",
+				description: "A summer promotional campaign",
+				status: "generating",
+				adCount: 0,
+				createdAt: new Date().toISOString(),
+			})
+			.run();
+
+		const rows = db
+			.select()
+			.from(schema.campaigns)
+			.where(eq(schema.campaigns.id, "camp-1"))
+			.all();
+		expect(rows).toHaveLength(1);
+		expect(rows[0]?.name).toBe("Summer Campaign");
+		expect(rows[0]?.status).toBe("generating");
+		expect(rows[0]?.adCount).toBe(0);
+	});
+
+	test("ad_briefs can have campaignId", () => {
+		const { db } = createTestDb();
+		db.insert(schema.campaigns)
+			.values({
+				id: "camp-2",
+				name: "Fall Campaign",
+				prompt: "Create fall ads",
+				description: "A fall promotional campaign",
+				status: "completed",
+				adCount: 3,
+				createdAt: new Date().toISOString(),
+			})
+			.run();
+
+		db.insert(schema.adBriefs)
+			.values({
+				id: "brief-camp",
+				audience: "parent",
+				product: "Math App",
+				campaignGoal: "conversion",
+				emotionalAngle: "aspiration",
+				hookStyle: "question",
+				bodyPattern: "problem-agitate-solution",
+				offerType: "Free Trial",
+				brandVoice: JSON.stringify(["friendly"]),
+				campaignId: "camp-2",
+				createdAt: new Date().toISOString(),
+			})
+			.run();
+
+		const rows = db
+			.select()
+			.from(schema.adBriefs)
+			.where(eq(schema.adBriefs.id, "brief-camp"))
+			.all();
+		expect(rows).toHaveLength(1);
+		expect(rows[0]?.campaignId).toBe("camp-2");
 	});
 });
