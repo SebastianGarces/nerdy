@@ -14,6 +14,7 @@ import { dirname, resolve } from "node:path";
 import { cleanScrapedAds } from "./clean.js";
 import { COMPETITORS } from "./config.js";
 import type { ScrapeConfig } from "./config.js";
+import { importScrapedAds } from "./import.js";
 import { scrapeMultipleAdvertisers } from "./index.js";
 
 function parseArgs(argv: string[]): {
@@ -22,6 +23,7 @@ function parseArgs(argv: string[]): {
 	outputPath: string | null;
 	useStdout: boolean;
 	usedAll: boolean;
+	importPath: string | null;
 } {
 	const args = argv.slice(2);
 	const advertisers: string[] = [];
@@ -29,12 +31,16 @@ function parseArgs(argv: string[]): {
 	let outputPath: string | null = null;
 	let useStdout = false;
 	let usedAll = false;
+	let importPath: string | null = null;
 
 	let i = 0;
 	while (i < args.length) {
 		const arg = args[i];
 
-		if (arg === "--advertiser" && i + 1 < args.length) {
+		if (arg === "--import" && i + 1 < args.length) {
+			importPath = args[i + 1] as string;
+			i += 2;
+		} else if (arg === "--advertiser" && i + 1 < args.length) {
 			advertisers.push(args[i + 1] as string);
 			i += 2;
 		} else if (arg === "--all") {
@@ -67,10 +73,12 @@ Usage:
   bun run scrape:all
   bun run scrape --advertiser "Varsity Tutors" --stdout
   bun run scrape --advertiser "Varsity Tutors" -o custom/path.json
+  bun run scrape --import path/to/scraped.json
 
 Options:
   --advertiser <name>       Advertiser to scrape (can be repeated)
   --all                     Scrape all known competitors
+  --import <filePath>       Import scraped ads from a JSON file into the DB
   --output, -o <path>       Custom output file path
   --stdout                  Print JSON to stdout instead of writing a file
   --headless <true|false>   Run headless (default: true)
@@ -90,14 +98,14 @@ Output:
 		}
 	}
 
-	if (advertisers.length === 0) {
+	if (advertisers.length === 0 && !importPath) {
 		console.error(
-			"Error: specify --advertiser <name> or --all. Use --help for usage.",
+			"Error: specify --advertiser <name>, --all, or --import <path>. Use --help for usage.",
 		);
 		process.exit(1);
 	}
 
-	return { advertisers, config, outputPath, useStdout, usedAll };
+	return { advertisers, config, outputPath, useStdout, usedAll, importPath };
 }
 
 function slugify(name: string): string {
@@ -115,9 +123,18 @@ function formatTimestamp(date: Date): string {
 }
 
 async function main() {
-	const { advertisers, config, outputPath, useStdout, usedAll } = parseArgs(
-		process.argv,
-	);
+	const { advertisers, config, outputPath, useStdout, usedAll, importPath } =
+		parseArgs(process.argv);
+
+	if (importPath) {
+		const { createDb } = await import("../db/index.js");
+		const dbPath =
+			process.env.DATABASE_URL ?? "./apps/server/data/nerdy.sqlite";
+		const db = createDb(dbPath);
+		const count = await importScrapedAds(importPath, db);
+		console.error(`Imported ${count} ads from ${importPath}`);
+		return;
+	}
 
 	console.error(
 		`Scraping ${advertisers.length} advertiser(s): ${advertisers.join(", ")}`,

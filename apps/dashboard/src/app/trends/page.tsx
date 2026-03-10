@@ -1,11 +1,14 @@
 "use client";
 
+import { IterationChart } from "@/components/ui/iteration-chart";
 import { TrendChart } from "@/components/ui/trend-chart";
-import { useTrends } from "@/lib/api";
+import { useIterationTrends, useTrends } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
 export default function TrendsPage() {
 	const { data, isLoading, error } = useTrends();
+	const { data: iterationData } = useIterationTrends();
+	const iterationTrends = iterationData?.trends ?? [];
 
 	if (isLoading) {
 		return (
@@ -62,6 +65,15 @@ export default function TrendsPage() {
 						color="#10b981"
 					/>
 				</div>
+
+				{iterationTrends.length > 0 && (
+					<div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+						<h2 className="mb-4 text-lg font-semibold">
+							Score Improvement by Iteration
+						</h2>
+						<IterationChart data={iterationTrends} />
+					</div>
+				)}
 			</div>
 		</div>
 	);

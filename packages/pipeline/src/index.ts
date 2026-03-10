@@ -21,3 +21,5 @@ export {
 } from "./scrape/config.js";
 export type { ScrapeConfig } from "./scrape/config.js";
 export { cleanScrapedAds } from "./scrape/clean.js";
+export { importScrapedAds } from "./scrape/import.js";
+export { calibrateFromCompetitorAds } from "./evaluate/calibrate.js";

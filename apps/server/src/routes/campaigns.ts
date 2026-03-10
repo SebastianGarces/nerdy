@@ -148,6 +148,112 @@ export function campaignRoutes(db: AppDatabase) {
 			},
 		)
 
+		.get(
+			"/:id/export",
+			async ({ params, query, set }) => {
+				const format = query.format ?? "json";
+
+				const [campaign] = await db
+					.select()
+					.from(campaigns)
+					.where(eq(campaigns.id, params.id));
+
+				if (!campaign) {
+					set.status = 404;
+					return { error: "Campaign not found" };
+				}
+
+				// Get briefs for this campaign
+				const briefRows = await db
+					.select()
+					.from(adBriefs)
+					.where(eq(adBriefs.campaignId, params.id));
+
+				const briefIds = briefRows.map((b) => b.id);
+				if (briefIds.length === 0) {
+					if (format === "csv") {
+						return new Response("No data", {
+							headers: { "Content-Type": "text/csv" },
+						});
+					}
+					return { evaluations: [] };
+				}
+
+				// Get ads for those briefs, joined with evaluations
+				const rows = await db
+					.select({
+						evalId: evaluations.id,
+						adId: evaluations.adId,
+						primaryText: generatedAds.primaryText,
+						headline: generatedAds.headline,
+						description: generatedAds.description,
+						callToAction: generatedAds.callToAction,
+						dimensions: evaluations.dimensions,
+						weightedScore: evaluations.weightedScore,
+						confidence: evaluations.confidence,
+						model: evaluations.model,
+						iteration: generatedAds.iteration,
+						createdAt: evaluations.createdAt,
+					})
+					.from(evaluations)
+					.innerJoin(
+						generatedAds,
+						sql`${evaluations.adId} = ${generatedAds.id}`,
+					)
+					.where(
+						sql`${generatedAds.briefId} IN (${sql.join(
+							briefIds.map((id) => sql`${id}`),
+							sql`, `,
+						)})`,
+					);
+
+				if (format === "csv") {
+					const header =
+						"id,primaryText,headline,description,callToAction,clarity,valueProposition,callToActionScore,brandVoice,emotionalResonance,weightedScore,iteration";
+					const csvRows = rows.map((row) => {
+						const dims = JSON.parse(row.dimensions as string) as Array<{
+							dimension: string;
+							score: number;
+						}>;
+						const dimMap: Record<string, number> = {};
+						for (const d of dims) dimMap[d.dimension] = d.score;
+						return [
+							row.evalId,
+							`"${(row.primaryText ?? "").replace(/"/g, '""')}"`,
+							`"${(row.headline ?? "").replace(/"/g, '""')}"`,
+							`"${(row.description ?? "").replace(/"/g, '""')}"`,
+							`"${(row.callToAction ?? "").replace(/"/g, '""')}"`,
+							dimMap.clarity ?? "",
+							dimMap.valueProposition ?? "",
+							dimMap.callToAction ?? "",
+							dimMap.brandVoice ?? "",
+							dimMap.emotionalResonance ?? "",
+							row.weightedScore,
+							row.iteration,
+						].join(",");
+					});
+
+					return new Response([header, ...csvRows].join("\n"), {
+						headers: {
+							"Content-Type": "text/csv",
+							"Content-Disposition": `attachment; filename=campaign-${params.id}.csv`,
+						},
+					});
+				}
+
+				const parsed = rows.map((row) => ({
+					...row,
+					dimensions: JSON.parse(row.dimensions as string),
+				}));
+				return { evaluations: parsed };
+			},
+			{
+				params: t.Object({
+					id: t.String(),
+				}),
+			},
+		)
+
 		.post(
 			"/:id/generate",
 			async ({ params, set }) => {

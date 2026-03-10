@@ -135,6 +135,25 @@ export function useTrends() {
 	});
 }
 
+export interface IterationTrend {
+	iteration: number;
+	avgScoreBefore: number;
+	avgScoreAfter: number;
+	count: number;
+}
+
+interface IterationTrendsResponse {
+	trends: IterationTrend[];
+}
+
+export function useIterationTrends() {
+	return useQuery<IterationTrendsResponse>({
+		queryKey: ["iteration-trends"],
+		queryFn: () =>
+			fetchApi<IterationTrendsResponse>("/api/evaluations/iteration-trends"),
+	});
+}
+
 export interface Campaign {
 	id: string;
 	name: string;
