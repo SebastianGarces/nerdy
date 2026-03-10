@@ -13,7 +13,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { COMPETITORS } from "./config.js";
 import type { ScrapeConfig } from "./config.js";
-import { scrapeCompetitorAds } from "./index.js";
+import { scrapeMultipleAdvertisers } from "./index.js";
 
 function parseArgs(argv: string[]): {
 	advertisers: string[];
@@ -122,14 +122,15 @@ async function main() {
 		`Scraping ${advertisers.length} advertiser(s): ${advertisers.join(", ")}`,
 	);
 
-	const allAds = [];
+	const results = await scrapeMultipleAdvertisers(
+		advertisers,
+		config,
+		(advertiser, count) => {
+			console.error(`  ${advertiser}: ${count} ads`);
+		},
+	);
 
-	for (const advertiser of advertisers) {
-		console.error(`\nScraping: ${advertiser}...`);
-		const ads = await scrapeCompetitorAds(advertiser, config);
-		console.error(`  Found ${ads.length} ads`);
-		allAds.push(...ads);
-	}
+	const allAds = results.flatMap((r) => r.ads);
 
 	console.error(`\nTotal ads scraped: ${allAds.length}`);
 

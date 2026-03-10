@@ -1,9 +1,14 @@
 import { nanoid } from "nanoid";
-import { chromium } from "playwright";
+import { type Browser, chromium } from "playwright";
 import type { CompetitorAd } from "../types/index.js";
 import { DEFAULT_SCRAPE_CONFIG, buildAdLibraryUrl } from "./config.js";
 import type { ScrapeConfig } from "./config.js";
 import { SELECTORS, parseAdCard } from "./parser.js";
+
+/**
+ * Page type alias for Playwright page instances.
+ */
+type Page = Awaited<ReturnType<Browser["newPage"]>>;
 
 /**
  * Scrape competitor ads from Meta Ad Library for a given advertiser.
@@ -20,19 +25,77 @@ export async function scrapeCompetitorAds(
 	config?: ScrapeConfig,
 ): Promise<CompetitorAd[]> {
 	const cfg = { ...DEFAULT_SCRAPE_CONFIG, ...config };
-	const url = buildAdLibraryUrl(advertiser);
-	const ads: CompetitorAd[] = [];
 
-	let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
+	let browser: Browser | null = null;
 
 	try {
 		browser = await chromium.launch({ headless: cfg.headless ?? true });
-		const context = await browser.newContext({
-			userAgent:
-				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-		});
-		const page = await context.newPage();
+		const ads = await scrapeAdvertiserWithBrowser(browser, advertiser, cfg);
+		return ads;
+	} catch (err) {
+		console.warn(`[scraper] Scraping failed for "${advertiser}":`, err);
+		return [];
+	} finally {
+		if (browser) {
+			await browser.close();
+		}
+	}
+}
 
+/**
+ * Scrape multiple advertisers reusing a single browser instance.
+ *
+ * This avoids the overhead of launching a new browser per advertiser.
+ *
+ * @param advertisers - List of company names to search for
+ * @param config - Optional scraping configuration overrides
+ * @param onProgress - Optional callback invoked after each advertiser completes
+ * @returns Array of results per advertiser
+ */
+export async function scrapeMultipleAdvertisers(
+	advertisers: string[],
+	config?: ScrapeConfig,
+	onProgress?: (advertiser: string, count: number) => void,
+): Promise<{ advertiser: string; ads: CompetitorAd[] }[]> {
+	const cfg = { ...DEFAULT_SCRAPE_CONFIG, ...config };
+	const results: { advertiser: string; ads: CompetitorAd[] }[] = [];
+
+	let browser: Browser | null = null;
+	try {
+		browser = await chromium.launch({ headless: cfg.headless ?? true });
+
+		for (const advertiser of advertisers) {
+			const ads = await scrapeAdvertiserWithBrowser(browser, advertiser, cfg);
+			onProgress?.(advertiser, ads.length);
+			results.push({ advertiser, ads });
+		}
+	} finally {
+		if (browser) {
+			await browser.close();
+		}
+	}
+
+	return results;
+}
+
+/**
+ * Core scraping logic for a single advertiser using an existing browser instance.
+ */
+async function scrapeAdvertiserWithBrowser(
+	browser: Browser,
+	advertiser: string,
+	cfg: ScrapeConfig,
+): Promise<CompetitorAd[]> {
+	const url = buildAdLibraryUrl(advertiser);
+	const ads: CompetitorAd[] = [];
+
+	const context = await browser.newContext({
+		userAgent:
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+	});
+	const page = await context.newPage();
+
+	try {
 		// Navigate to Ad Library
 		await page.goto(url, {
 			waitUntil: "domcontentloaded",
@@ -66,15 +129,47 @@ export async function scrapeCompetitorAds(
 			previousCount = currentCount;
 		}
 
-		// Extract ad cards
-		const cardElements = page.locator(adCardSelector);
-		const count = await cardElements.count();
+		// Extract ad card HTML by walking up from data-testid containers
+		// to their card boundary (the ancestor whose parent is the grid).
+		// Uses evaluate with a function arg to pass the selector; the callback
+		// runs in the browser context so we suppress DOM type checks via casts.
+		const cardHtmls = await page.evaluate(
+			/* istanbul ignore next -- browser context */
+			(selector) => {
+				const containers = (globalThis as Record<string, unknown>).document as {
+					querySelectorAll(s: string): ArrayLike<unknown>;
+				};
+				const nodes = containers.querySelectorAll(selector);
+				const results: string[] = [];
+
+				for (const container of Array.from(nodes)) {
+					// Walk up to find the card boundary — the ancestor whose
+					// parent has many children (the grid container)
+					let el = container as {
+						parentElement: {
+							children: ArrayLike<unknown>;
+						} | null;
+						outerHTML: string;
+					};
+					for (let i = 0; i < 10 && el.parentElement; i++) {
+						if (el.parentElement.children.length > 5) {
+							break;
+						}
+						el = el.parentElement as unknown as typeof el;
+					}
+					results.push(el.outerHTML);
+				}
+
+				return results;
+			},
+			adCardSelector,
+		);
 
 		const now = new Date().toISOString();
 
-		for (let i = 0; i < count; i++) {
+		for (let i = 0; i < cardHtmls.length; i++) {
 			try {
-				const cardHtml = await cardElements.nth(i).innerHTML();
+				const cardHtml = cardHtmls[i] as string;
 				const parsed = parseAdCard(cardHtml);
 
 				if (!parsed) continue;
@@ -98,13 +193,8 @@ export async function scrapeCompetitorAds(
 				console.warn(`[scraper] Failed to parse card ${i}:`, err);
 			}
 		}
-	} catch (err) {
-		console.warn(`[scraper] Scraping failed for "${advertiser}":`, err);
-		return [];
 	} finally {
-		if (browser) {
-			await browser.close();
-		}
+		await context.close();
 	}
 
 	return ads;
@@ -114,9 +204,7 @@ export async function scrapeCompetitorAds(
  * Try multiple CSS selectors and return the first one that matches elements.
  */
 async function resolveSelector(
-	page: Awaited<
-		ReturnType<Awaited<ReturnType<typeof chromium.launch>>["newPage"]>
-	>,
+	page: Page,
 	selectors: string[],
 ): Promise<string | null> {
 	for (const selector of selectors) {

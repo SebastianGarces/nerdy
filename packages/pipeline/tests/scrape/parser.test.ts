@@ -139,14 +139,15 @@ describe("SELECTORS", () => {
 	it("has expected selector keys", () => {
 		expect(SELECTORS.adCard).toBeDefined();
 		expect(SELECTORS.adCardFallback).toBeDefined();
-		expect(SELECTORS.primaryText).toBeDefined();
-		expect(SELECTORS.headline).toBeDefined();
-		expect(SELECTORS.startDate).toBeDefined();
-		expect(SELECTORS.platform).toBeDefined();
+	});
+
+	it("uses stable data-testid for primary selector", () => {
+		expect(SELECTORS.adCard).toContain("data-testid");
+		expect(SELECTORS.adCard).toContain("ad-library-dynamic-content-container");
 	});
 
 	it("selectors are non-empty strings", () => {
-		for (const [key, value] of Object.entries(SELECTORS)) {
+		for (const [_key, value] of Object.entries(SELECTORS)) {
 			expect(typeof value).toBe("string");
 			expect(value.length).toBeGreaterThan(0);
 		}

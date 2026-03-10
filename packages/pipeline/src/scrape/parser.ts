@@ -23,26 +23,10 @@ export interface RawAdData {
  * update these selectors based on the current DOM structure.
  */
 export const SELECTORS = {
-	/** Container for each individual ad card */
-	adCard: 'div[class*="_7jvw"]',
-	/** Fallback ad card selector using aria role */
-	adCardFallback: 'div[role="article"]',
-	/** Primary ad text / body copy */
-	primaryText: 'div[class*="_7jyr"]',
-	/** Fallback: any large text block within the card */
-	primaryTextFallback: "div._4ik4 > div",
-	/** Ad headline (link text) */
-	headline: 'div[class*="_8jm_"]',
-	/** Headline fallback */
-	headlineFallback: "a[class*='_8jm'] > span",
-	/** "Started running on" date text */
-	startDate: 'span[class*="_7jys"]',
-	/** Fallback start date pattern */
-	startDateFallback: "div:has-text('Started running on')",
-	/** Platform indicators (Facebook, Instagram, Messenger, etc.) */
-	platform: 'div[class*="_7jyu"]',
-	/** Fallback platform selector */
-	platformFallback: 'span:has-text("Facebook"), span:has-text("Instagram")',
+	/** Container for each individual ad card - uses stable data-testid */
+	adCard: '[data-testid="ad-library-dynamic-content-container"]',
+	/** Fallback: find divs containing Library ID text pattern */
+	adCardFallback: 'div:has(span:has-text("Library ID:"))',
 } as const;
 
 /**
