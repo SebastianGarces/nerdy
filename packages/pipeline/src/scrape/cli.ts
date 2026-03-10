@@ -11,6 +11,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { cleanScrapedAds } from "./clean.js";
 import { COMPETITORS } from "./config.js";
 import type { ScrapeConfig } from "./config.js";
 import { scrapeMultipleAdvertisers } from "./index.js";
@@ -131,15 +132,19 @@ async function main() {
 	);
 
 	const allAds = results.flatMap((r) => r.ads);
+	const cleanedAds = cleanScrapedAds(allAds);
 
-	console.error(`\nTotal ads scraped: ${allAds.length}`);
+	console.error(
+		`\nTotal ads scraped: ${allAds.length} (${cleanedAds.length} after cleaning)`,
+	);
 
 	const now = new Date();
 	const artifact = {
 		scrapedAt: now.toISOString(),
 		advertisers,
-		totalAds: allAds.length,
-		ads: allAds,
+		totalAdsRaw: allAds.length,
+		totalAds: cleanedAds.length,
+		ads: cleanedAds,
 	};
 
 	if (useStdout) {

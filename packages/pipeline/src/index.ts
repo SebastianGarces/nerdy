@@ -20,3 +20,4 @@ export {
 	buildAdLibraryUrl,
 } from "./scrape/config.js";
 export type { ScrapeConfig } from "./scrape/config.js";
+export { cleanScrapedAds } from "./scrape/clean.js";
