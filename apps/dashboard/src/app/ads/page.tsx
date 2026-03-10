@@ -1,10 +1,13 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useAds } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { FileText, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+
+const PAGE_SIZE = 25;
 
 const statusFilters = ["all", "generating", "published", "discarded"] as const;
 
@@ -25,8 +28,10 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function AdsPage() {
 	const [statusFilter, setStatusFilter] = useState<string>("all");
+	const [page, setPage] = useState(0);
 	const { data, isLoading, error } = useAds({
-		limit: 50,
+		limit: PAGE_SIZE,
+		offset: page * PAGE_SIZE,
 		status: statusFilter,
 	});
 
@@ -39,7 +44,10 @@ export default function AdsPage() {
 						<button
 							key={status}
 							type="button"
-							onClick={() => setStatusFilter(status)}
+							onClick={() => {
+								setStatusFilter(status);
+								setPage(0);
+							}}
 							className={cn(
 								"rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
 								statusFilter === status
@@ -118,9 +126,36 @@ export default function AdsPage() {
 			)}
 
 			{data && (
-				<p className="mt-4 text-sm text-neutral-500">
-					Showing {data.ads.length} of {data.total} ads
-				</p>
+				<div className="mt-4 flex items-center justify-between">
+					<p className="text-sm text-neutral-500">
+						Showing {data.ads.length === 0 ? 0 : page * PAGE_SIZE + 1}–
+						{page * PAGE_SIZE + data.ads.length} of {data.total} ads
+					</p>
+					<div className="flex items-center gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setPage((p) => p - 1)}
+							disabled={page === 0}
+						>
+							<ChevronLeft className="h-4 w-4" />
+							Previous
+						</Button>
+						<span className="text-sm text-neutral-400">
+							Page {page + 1} of{" "}
+							{Math.max(1, Math.ceil((data.total ?? 0) / PAGE_SIZE))}
+						</span>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setPage((p) => p + 1)}
+							disabled={page * PAGE_SIZE + data.ads.length >= (data.total ?? 0)}
+						>
+							Next
+							<ChevronRight className="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
 			)}
 		</div>
 	);
