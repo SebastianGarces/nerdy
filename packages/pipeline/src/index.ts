@@ -9,3 +9,10 @@ export * from "./iterate/index.js";
 export * from "./graph/index.js";
 export * from "./graph/runner.js";
 export * from "./graph/state.js";
+export { scrapeCompetitorAds } from "./scrape/index.js";
+export {
+	COMPETITORS,
+	DEFAULT_SCRAPE_CONFIG,
+	buildAdLibraryUrl,
+} from "./scrape/config.js";
+export type { ScrapeConfig } from "./scrape/config.js";
