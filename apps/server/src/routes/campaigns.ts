@@ -43,7 +43,11 @@ export function campaignRoutes(db: AppDatabase) {
 
 				// Run pipeline in background (fire-and-forget)
 				// Pipeline runner inserts briefs with campaignId
-				runPipeline(briefs, config, db, { campaignId })
+				runPipeline(briefs, config, db, {
+					campaignId,
+					targetCount: count,
+					generateMoreBriefs: (n) => promptToBriefs(prompt, n, config),
+				})
 					.then(async () => {
 						await db
 							.update(campaigns)
@@ -175,7 +179,11 @@ export function campaignRoutes(db: AppDatabase) {
 					.where(eq(campaigns.id, params.id));
 
 				// Pipeline runner inserts briefs with campaignId
-				runPipeline(briefs, config, db, { campaignId: params.id })
+				runPipeline(briefs, config, db, {
+					campaignId: params.id,
+					targetCount: count,
+					generateMoreBriefs: (n) => promptToBriefs(campaign.prompt, n, config),
+				})
 					.then(async () => {
 						await db
 							.update(campaigns)
