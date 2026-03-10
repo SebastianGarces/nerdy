@@ -1,34 +1,7 @@
 import { Database } from "bun:sqlite";
-import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { Elysia } from "elysia";
 import { setupDatabaseFromSqlite } from "../src/db.js";
-
-// Mock the pipeline module before importing routes
-// runPipeline tries to create a real DB connection; generateBriefs is pure
-mock.module("@nerdy/pipeline", () => {
-	const actual = require("@nerdy/pipeline");
-	return {
-		...actual,
-		generateBriefs: (count: number) => {
-			const briefs = [];
-			for (let i = 0; i < count; i++) {
-				briefs.push({
-					audience: "parent",
-					product: "Varsity Tutors",
-					campaignGoal: "conversion",
-					emotionalAngle: "aspiration",
-					hookStyle: "question",
-					bodyPattern: "problem-agitate-solution",
-					offerType: "Free consultation",
-					brandVoice: ["empowering"],
-				});
-			}
-			return briefs;
-		},
-		runPipeline: async () => [],
-	};
-});
-
 import { campaignRoutes } from "../src/routes/campaigns.js";
 
 interface CampaignListResponse {
