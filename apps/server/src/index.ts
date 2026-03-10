@@ -12,10 +12,11 @@ import {
 } from "./routes/index.js";
 
 const port = process.env.SERVER_PORT ?? 3001;
-const databaseUrl = process.env.DATABASE_URL ?? "./data/nerdy.sqlite";
+const databaseUrl =
+	process.env.DATABASE_URL ?? "./apps/server/data/nerdy.sqlite";
 
 // Ensure data directory exists
-if (databaseUrl !== ":memory:" && !databaseUrl.startsWith("file:")) {
+if (databaseUrl !== ":memory:") {
 	mkdirSync(dirname(databaseUrl), { recursive: true });
 }
 
