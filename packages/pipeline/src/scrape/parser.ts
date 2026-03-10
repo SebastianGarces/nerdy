@@ -25,8 +25,8 @@ export interface RawAdData {
 export const SELECTORS = {
 	/** Container for each individual ad card - uses stable data-testid */
 	adCard: '[data-testid="ad-library-dynamic-content-container"]',
-	/** Fallback: find divs containing Library ID text pattern */
-	adCardFallback: 'div:has(span:has-text("Library ID:"))',
+	/** Fallback: broader container selector (valid native CSS) */
+	adCardFallback: 'div[class] > div[class] > div[class]',
 } as const;
 
 /**
