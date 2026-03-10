@@ -115,6 +115,8 @@ export interface GeneratedAd {
 	metadata: {
 		model: string;
 		tokens: number;
+		promptTokens: number;
+		completionTokens: number;
 		latencyMs: number;
 	};
 	iteration: number;
