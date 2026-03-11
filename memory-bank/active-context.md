@@ -1,13 +1,12 @@
 # Active Context: Nerdy Ad Engine
 
 ## Current Phase
-Pomelli-style campaign creation feature complete. Dashboard overhauled.
+Pipeline validated with real LLM API. Generating real ads end-to-end.
 
 ## Just Completed
-- Campaign schema: `campaigns` table (7 tables total), `campaignId` FK on `adBriefs`
-- Prompt-to-briefs: LLM-powered brief generation from natural language + campaignPrompt threading through graph
-- Campaign API: CRUD routes (POST create, GET list, GET detail, POST generate more)
-- Dashboard overhaul: PromptInput, CampaignCard, CreativeCard (4:5 portrait), campaign detail page with creative gallery
+- Real pipeline run: 47 briefs → 72 ads, avg score 7.46, 93% >= 7.0, 100% >= 6.0
+- Campaign creation via promptToBriefs working end-to-end with OpenRouter/Gemini 2.0 Flash
+- Memory bank and docs synced to match actual codebase state
 
 ## Quality Gates
 - Biome: 0 violations (77 files)
@@ -31,9 +30,11 @@ Pomelli-style campaign creation feature complete. Dashboard overhauled.
 - Campaign detail page polls every 3s while status is "generating"
 
 ## Next Steps
-1. Run pipeline with real API key to generate 50+ ads
-2. Integrate promptToBriefs into campaign API routes (currently uses matrix fallback)
-3. Future: image generation (portrait dimensions for Instagram/Facebook)
+1. Update technical-writeup Results section with real pipeline numbers
+2. Run Meta Ad Library scraper for competitive intelligence (+10 bonus)
+3. Verify dashboard trend charts and token_usage tracking with real data
+4. Docker deployment verification
+5. Future: image generation (portrait dimensions for Instagram/Facebook)
 
 ## Blockers
 None

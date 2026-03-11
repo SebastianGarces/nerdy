@@ -54,3 +54,13 @@
 - Instructs the model to maintain or improve quality on all other dimensions (preventing regression)
 
 **Design rationale**: By providing the full evaluation context, the model understands both what to fix and what to preserve. The explicit "do not sacrifice strengths" instruction addresses the common failure mode where improving one dimension degrades others.
+
+### Brief Generation Prompt (promptToBriefs)
+
+**Purpose**: Generate structured ad briefs from a natural language campaign description.
+
+**Key elements**:
+- Takes a freeform campaign prompt (e.g., "Back-to-school campaign targeting parents of high schoolers struggling with math")
+- Returns an array of AdBrief objects matching the schema: audience, campaignGoal, emotionalAngle, offerType, hookStyle, bodyPattern
+- Each brief is a unique combination tailored to the campaign description
+- Falls back to matrix-based generateBriefs if the LLM call fails

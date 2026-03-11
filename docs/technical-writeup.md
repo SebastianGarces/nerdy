@@ -8,7 +8,7 @@ The architecture is a Bun monorepo with three packages:
 
 - **packages/pipeline** -- Core pipeline containing the LangGraph-based generate-evaluate-iterate loop, Drizzle ORM schema (7 tables in SQLite), the evaluator with weighted scoring, the brief matrix generator, and a Playwright-based Meta Ad Library scraper for competitor analysis.
 - **apps/server** -- Elysia API serving ads, evaluations, briefs, and pipeline execution endpoints.
-- **apps/dashboard** -- Next.js 15 dashboard with Tailwind v4 and Recharts for visualizing ad quality stats, trends, and per-ad radar charts.
+- **apps/dashboard** -- Next.js 16 dashboard with Tailwind v4, Recharts for visualizing ad quality stats/trends/per-ad radar charts, and motion (framer-motion v12+) for shared layout animations.
 
 ## Key Design Decisions
 
@@ -20,7 +20,9 @@ The architecture is a Bun monorepo with three packages:
 
 **Structured output via Zod**: Both generator and evaluator use `withStructuredOutput` to enforce typed JSON responses from the LLM, eliminating parsing failures and ensuring every evaluation includes all 5 dimensions.
 
-**Single model via OpenRouter**: Gemini 2.0 Flash (`google/gemini-2.0-flash-001`) handles both generation and evaluation through OpenRouter, providing a cost-effective single-API approach.
+**Quality threshold & evaluator calibration** (see [ADR 0005](../decisions/0005-quality-threshold-and-evaluator-bias.md)): The initial 7.0 threshold with a lenient evaluator meant most ads passed on the first iteration, bypassing the self-healing loop. The fix was two-pronged: raise the publish threshold to 7.5, and add explicit tough-critic instructions to the evaluator prompt (penalize generic content, anchor scoring baseline at 5-6 for first drafts, set evaluator temperature to 0 for deterministic scoring). Three few-shot examples at ~8.0, ~6.0, and ~4.0 calibrate the scoring distribution.
+
+**Single model via OpenRouter**: Gemini 2.0 Flash (`google/gemini-2.0-flash-001`) handles both generation (temperature 0.7) and evaluation (temperature 0) through OpenRouter, providing a cost-effective single-API approach.
 
 ## Iteration Methodology
 
@@ -32,13 +34,13 @@ The self-healing loop works as follows:
 4. **Diagnose & Regenerate**: The `diagnoseWeakness` function identifies the lowest-scoring dimension (breaking ties by weight). The regeneration prompt includes the previous ad, all scores with rationale, and explicitly targets the weakest dimension while instructing the model to preserve strengths.
 5. **Re-evaluate**: The regenerated ad is scored again, and the loop repeats until published or discarded.
 
-The evaluation prompt includes two few-shot examples (a good ad scoring ~8.0 and a poor ad scoring ~4.0) to calibrate scoring consistency.
+The evaluation prompt includes three few-shot examples (a good ad scoring ~8.0, a mediocre ad scoring ~6.0, and a poor ad scoring ~4.0) to calibrate the scoring distribution. The evaluator runs at temperature 0 for deterministic scoring; the generator runs at temperature 0.7 for creative variation.
 
 ## Results
 
-- **Pipeline output**: 72 ads generated from 47 LLM-created briefs, achieving an average quality score of 7.46/10. 93% of ads scored >= 7.0, and 100% scored >= 6.0, demonstrating consistent quality above the minimum threshold.
-- **Iteration effectiveness**: The self-healing loop improved ads through up to 3 iterations per brief, with the regeneration prompt successfully targeting diagnosed weaknesses (most commonly emotional resonance and brand voice).
-- **Test coverage**: 152 tests across 20 test files covering types, generation, evaluation, iteration, graph, scraper, database, API routes, campaigns, brief generation, and token tracking.
+- **Pipeline output**: 353 published ads from 358 briefs across 9 campaigns, with a 98.6% pass rate. Published ads average 7.66/10 weighted score (min 7.55, max 8.4). The 5 discarded ads averaged 7.09 — below the 7.5 threshold even after exhausting 3 iterations.
+- **Iteration effectiveness**: Average 1.6 iterations per brief. 158 ads (44%) published on the first iteration, 177 (50%) on the second, and 18 (5%) on the third. The self-healing loop successfully improves most ads within 2 iterations, targeting diagnosed weaknesses (most commonly emotional resonance and brand voice).
+- **Test coverage**: 158 tests across 16 test files covering types, generation, evaluation, iteration, graph, scraper, database, API routes, campaigns, brief generation, and token tracking.
 - **Quality gates**: All three gates pass consistently -- Biome lint (zero violations), TypeScript strict mode (zero errors across 3 workspaces), and bun test (all passing).
 - **Brief matrix**: 1,152 unique brief combinations available via combinatorial generation, with LLM-powered `promptToBriefs` as the primary brief creation method for campaign-driven workflows.
 - **Competitive calibration**: Evaluator calibrated against 35 scraped competitor ads from Meta Ad Library (Varsity Tutors, Wyzant, Tutor.com, Khan Academy, Chegg, Kumon). Varsity Tutors ads scored in the 7-9 range; shorter generic competitor ads scored 4-6, validating the evaluator's discrimination ability.
@@ -47,6 +49,6 @@ The evaluation prompt includes two few-shot examples (a good ad scoring ~8.0 and
 
 The top three limitations (see [docs/limitations.md](limitations.md) for the full list):
 
-1. **Self-referential evaluation**: The same model family evaluates ads it generates, which may create blind spots and convergence to local optima rather than genuinely better ads.
+1. **Self-referential evaluation**: The same model family evaluates ads it generates, which may create blind spots and convergence to local optima rather than genuinely better ads. ADR 0005 partially mitigates this with tough-critic prompting and deterministic scoring (temperature 0), but the fundamental limitation remains.
 2. **No real-world calibration**: Scores are not validated against human judgments or actual ad performance metrics (CTR, conversion rates).
 3. **Linear cost scaling**: Each generation and evaluation consumes API tokens with no caching or deduplication, making large batch runs expensive.
