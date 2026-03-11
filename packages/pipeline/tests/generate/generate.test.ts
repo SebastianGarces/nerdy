@@ -40,7 +40,10 @@ const MOCK_AD_OUTPUT = {
 function createMockLlm(): ChatOpenAI {
 	const mock = {
 		withStructuredOutput: () => ({
-			invoke: async () => MOCK_AD_OUTPUT,
+			invoke: async () => ({
+				raw: { response_metadata: {} },
+				parsed: MOCK_AD_OUTPUT,
+			}),
 		}),
 	} as unknown as ChatOpenAI;
 	return mock;
@@ -55,7 +58,10 @@ function createMockLlmWithPromptCapture(): {
 		withStructuredOutput: () => ({
 			invoke: async (messages: Array<{ role: string; content: string }>) => {
 				capturedMessages = messages;
-				return MOCK_AD_OUTPUT;
+				return {
+					raw: { response_metadata: {} },
+					parsed: MOCK_AD_OUTPUT,
+				};
 			},
 		}),
 	} as unknown as ChatOpenAI;

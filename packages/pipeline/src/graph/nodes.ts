@@ -109,8 +109,10 @@ export function createNodes(
 		// Track token usage for evaluation
 		const evalTokens = evaluation.tokensUsed;
 		if (evalTokens > 0) {
-			const evalPromptTokens = Math.round(evalTokens * 0.7); // Evaluation has more input
-			const evalCompletionTokens = evalTokens - evalPromptTokens;
+			const evalPromptTokens =
+				evaluation.promptTokens ?? Math.round(evalTokens * 0.7);
+			const evalCompletionTokens =
+				evaluation.completionTokens ?? evalTokens - evalPromptTokens;
 			const costUsd =
 				(evalPromptTokens * 0.1 + evalCompletionTokens * 0.4) / 1_000_000;
 			await db.insert(tokenUsage).values({

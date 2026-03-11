@@ -134,6 +134,8 @@ export interface Evaluation {
 	confidence: number;
 	model: string;
 	tokensUsed: number;
+	promptTokens?: number;
+	completionTokens?: number;
 	createdAt: string;
 }
 

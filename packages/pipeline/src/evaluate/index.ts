@@ -32,15 +32,24 @@ export function calculateWeightedScore(dimensions: DimensionScore[]): number {
 	return Math.round(total * 100) / 100;
 }
 
-export interface LLMInterface {
-	invoke(messages: Array<{ role: string; content: string }>): Promise<{
-		dimensions: Array<{
-			dimension: string;
-			score: number;
-			rationale: string;
-		}>;
-		confidence: number;
+export interface LLMResult {
+	dimensions: Array<{
+		dimension: string;
+		score: number;
+		rationale: string;
 	}>;
+	confidence: number;
+	tokensUsed?: {
+		totalTokens: number;
+		promptTokens: number;
+		completionTokens: number;
+	};
+}
+
+export interface LLMInterface {
+	invoke(
+		messages: Array<{ role: string; content: string }>,
+	): Promise<LLMResult>;
 }
 
 function createLLM(config: PipelineConfig): LLMInterface {
@@ -53,9 +62,32 @@ function createLLM(config: PipelineConfig): LLMInterface {
 		},
 	});
 
-	return model.withStructuredOutput(
-		EvaluationOutputSchema,
-	) as unknown as LLMInterface;
+	const structuredLlm = model.withStructuredOutput(EvaluationOutputSchema, {
+		includeRaw: true,
+	});
+
+	return {
+		invoke: async (messages) => {
+			const rawResult = await structuredLlm.invoke(messages);
+			// biome-ignore lint/suspicious/noExplicitAny: LangChain response metadata has dynamic shape
+			const rawMsg = rawResult.raw as any;
+			const tokenUsage = rawMsg?.response_metadata?.tokenUsage;
+			const usage = rawMsg?.response_metadata?.usage;
+			const totalTokens = tokenUsage?.totalTokens ?? usage?.total_tokens ?? 0;
+			const promptTokens =
+				tokenUsage?.promptTokens ?? usage?.prompt_tokens ?? 0;
+			const completionTokens =
+				tokenUsage?.completionTokens ?? usage?.completion_tokens ?? 0;
+
+			return {
+				...rawResult.parsed,
+				tokensUsed:
+					totalTokens > 0
+						? { totalTokens, promptTokens, completionTokens }
+						: undefined,
+			};
+		},
+	};
 }
 
 export async function evaluateAd(
@@ -71,10 +103,7 @@ export async function evaluateAd(
 		{ role: "user" as const, content: buildEvaluationPrompt(ad, brief) },
 	];
 
-	let result: {
-		dimensions: Array<{ dimension: string; score: number; rationale: string }>;
-		confidence: number;
-	};
+	let result: LLMResult;
 
 	try {
 		result = await model.invoke(messages);
@@ -112,19 +141,8 @@ export async function evaluateAd(
 
 	const weightedScore = calculateWeightedScore(dimensions);
 
-	// Extract token usage if available
-	let tokensUsed = 0;
-	const resultWithMeta = result as Record<string, unknown>;
-	if (
-		resultWithMeta?.response_metadata &&
-		typeof resultWithMeta.response_metadata === "object"
-	) {
-		const meta = resultWithMeta.response_metadata as Record<string, unknown>;
-		if (meta.tokenUsage && typeof meta.tokenUsage === "object") {
-			const usage = meta.tokenUsage as Record<string, number>;
-			tokensUsed = usage.totalTokens ?? 0;
-		}
-	}
+	// Extract token usage from result
+	const tokensUsed = result.tokensUsed?.totalTokens ?? 0;
 
 	return {
 		id: nanoid(),
@@ -134,6 +152,8 @@ export async function evaluateAd(
 		confidence: result.confidence,
 		model: EVALUATOR_MODEL,
 		tokensUsed,
+		promptTokens: result.tokensUsed?.promptTokens,
+		completionTokens: result.tokensUsed?.completionTokens,
 		createdAt: new Date().toISOString(),
 	};
 }

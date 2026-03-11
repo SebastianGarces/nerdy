@@ -54,7 +54,9 @@ export async function generateAd(
 			},
 		});
 
-	const structuredLlm = llm.withStructuredOutput(GeneratedAdOutputSchema);
+	const structuredLlm = llm.withStructuredOutput(GeneratedAdOutputSchema, {
+		includeRaw: true,
+	});
 
 	const userMessage = context
 		? buildRegenerationPrompt(
@@ -67,36 +69,38 @@ export async function generateAd(
 
 	const startTime = performance.now();
 
-	const result = await structuredLlm.invoke([
+	const rawResult = await structuredLlm.invoke([
 		{ role: "system", content: GENERATION_SYSTEM_PROMPT },
 		{ role: "user", content: userMessage },
 	]);
 
 	const latencyMs = Math.round(performance.now() - startTime);
 
-	// Extract token usage from the response metadata if available
+	// Extract token usage from the raw AIMessage response_metadata
 	// biome-ignore lint/suspicious/noExplicitAny: LangChain response metadata has dynamic shape
-	const resultAny = result as any;
+	const rawMsg = rawResult.raw as any;
+	const tokenUsage = rawMsg?.response_metadata?.tokenUsage;
+	const usage = rawMsg?.response_metadata?.usage;
 	const totalTokens: number =
-		resultAny?.__run?.response_metadata?.tokenUsage?.totalTokens ??
-		resultAny?.__run?.response_metadata?.usage?.total_tokens ??
-		0;
+		tokenUsage?.totalTokens ?? usage?.total_tokens ?? 0;
 	const promptTokens: number =
-		resultAny?.__run?.response_metadata?.tokenUsage?.promptTokens ??
-		resultAny?.__run?.response_metadata?.usage?.prompt_tokens ??
+		tokenUsage?.promptTokens ??
+		usage?.prompt_tokens ??
 		(totalTokens > 0 ? Math.round(totalTokens * 0.6) : 0);
 	const completionTokens: number =
-		resultAny?.__run?.response_metadata?.tokenUsage?.completionTokens ??
-		resultAny?.__run?.response_metadata?.usage?.completion_tokens ??
+		tokenUsage?.completionTokens ??
+		usage?.completion_tokens ??
 		(totalTokens > 0 ? totalTokens - promptTokens : 0);
+
+	const parsed = rawResult.parsed;
 
 	return {
 		id: nanoid(),
 		briefId,
-		primaryText: result.primaryText,
-		headline: result.headline,
-		description: result.description,
-		callToAction: result.callToAction,
+		primaryText: parsed.primaryText,
+		headline: parsed.headline,
+		description: parsed.description,
+		callToAction: parsed.callToAction,
 		metadata: {
 			model: MODEL,
 			tokens: totalTokens,

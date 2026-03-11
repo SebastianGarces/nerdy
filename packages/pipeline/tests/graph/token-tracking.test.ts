@@ -41,21 +41,51 @@ function createMockGenerateLlm() {
 	return {
 		withStructuredOutput: () => ({
 			invoke: async () => ({
-				primaryText: "Test primary text for the ad",
-				headline: "Test Headline",
-				description: "Test description for the ad",
-				callToAction: "Get Started",
+				raw: {
+					response_metadata: {
+						tokenUsage: {
+							totalTokens: 300,
+							promptTokens: 200,
+							completionTokens: 100,
+						},
+					},
+				},
+				parsed: {
+					primaryText: "Test primary text for the ad",
+					headline: "Test Headline",
+					description: "Test description for the ad",
+					callToAction: "Get Started",
+				},
 			}),
 		}),
 		// biome-ignore lint/suspicious/noExplicitAny: mock for testing
 	} as any;
 }
 
-/** Mock evaluate LLM that returns response_metadata with token usage */
+function createMockGenerateLlmNoTokens() {
+	return {
+		withStructuredOutput: () => ({
+			invoke: async () => ({
+				raw: {
+					response_metadata: {},
+				},
+				parsed: {
+					primaryText: "Test primary text for the ad",
+					headline: "Test Headline",
+					description: "Test description for the ad",
+					callToAction: "Get Started",
+				},
+			}),
+		}),
+		// biome-ignore lint/suspicious/noExplicitAny: mock for testing
+	} as any;
+}
+
+/** Mock evaluate LLM that returns tokensUsed on the result */
 function createMockEvaluateLlmWithTokens(score: number): LLMInterface {
 	return {
 		invoke: async () => {
-			const result = {
+			return {
 				dimensions: [
 					{ dimension: "clarity", score, rationale: "test" },
 					{ dimension: "valueProposition", score, rationale: "test" },
@@ -68,15 +98,12 @@ function createMockEvaluateLlmWithTokens(score: number): LLMInterface {
 					},
 				],
 				confidence: 0.85,
-				response_metadata: {
-					tokenUsage: {
-						totalTokens: 500,
-						promptTokens: 350,
-						completionTokens: 150,
-					},
+				tokensUsed: {
+					totalTokens: 500,
+					promptTokens: 350,
+					completionTokens: 150,
 				},
 			};
-			return result;
 		},
 	};
 }
@@ -141,7 +168,7 @@ describe("Token Usage Tracking", () => {
 			.run();
 	}
 
-	it("skips token_usage insert when generate returns 0 tokens", async () => {
+	it("records token_usage when generate returns tokens", async () => {
 		const briefId = nanoid();
 		insertBrief(briefId);
 
@@ -165,7 +192,39 @@ describe("Token Usage Tracking", () => {
 
 		await nodes.generate(baseState);
 
-		// Mock LLM doesn't provide token metadata, so tokens = 0 and no usage record
+		const usageRows = db.select().from(schema.tokenUsage).all();
+		const genUsage = usageRows.filter((r) => r.operation === "generate");
+		expect(genUsage).toHaveLength(1);
+		expect(genUsage[0]?.totalTokens).toBe(300);
+		expect(genUsage[0]?.promptTokens).toBe(200);
+		expect(genUsage[0]?.completionTokens).toBe(100);
+		expect(genUsage[0]?.costUsd).toBeGreaterThan(0);
+	});
+
+	it("skips token_usage insert when generate returns 0 tokens", async () => {
+		const briefId = nanoid();
+		insertBrief(briefId);
+
+		const nodes = createNodes(db, {
+			generateLlm: createMockGenerateLlmNoTokens(),
+		});
+
+		const baseState: AdPipelineStateType = {
+			brief: mockBrief,
+			briefId,
+			config: mockConfig,
+			currentAd: null,
+			evaluations: [],
+			iterationCount: 0,
+			maxIterations: 3,
+			weakestDimension: null,
+			tokenUsage: [],
+			status: "pending",
+			campaignPrompt: null,
+		};
+
+		await nodes.generate(baseState);
+
 		const usageRows = db.select().from(schema.tokenUsage).all();
 		expect(usageRows).toHaveLength(0);
 	});
@@ -220,6 +279,7 @@ describe("Token Usage Tracking", () => {
 		const evalUsage = usageRows.filter((r) => r.operation === "evaluate");
 		expect(evalUsage).toHaveLength(1);
 		expect(evalUsage[0]?.totalTokens).toBe(500);
+		// Now uses actual promptTokens/completionTokens from tokensUsed
 		expect(evalUsage[0]?.promptTokens).toBe(350);
 		expect(evalUsage[0]?.completionTokens).toBe(150);
 		expect(evalUsage[0]?.costUsd).toBeGreaterThan(0);
@@ -251,8 +311,8 @@ describe("Token Usage Tracking", () => {
 
 		const ads = db.select().from(schema.generatedAds).all();
 		expect(ads).toHaveLength(1);
-		// With mock LLM, tokens are 0 but the fields exist
-		expect(ads[0]?.promptTokens).toBe(0);
-		expect(ads[0]?.completionTokens).toBe(0);
+		// With includeRaw mock, tokens are extracted from response_metadata
+		expect(ads[0]?.promptTokens).toBe(200);
+		expect(ads[0]?.completionTokens).toBe(100);
 	});
 });

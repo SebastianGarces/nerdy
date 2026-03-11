@@ -63,10 +63,13 @@ function createMockGenerateLlm() {
 	return {
 		withStructuredOutput: () => ({
 			invoke: async () => ({
-				primaryText: "Test primary text for the ad",
-				headline: "Test Headline",
-				description: "Test description for the ad",
-				callToAction: "Get Started",
+				raw: { response_metadata: {} },
+				parsed: {
+					primaryText: "Test primary text for the ad",
+					headline: "Test Headline",
+					description: "Test description for the ad",
+					callToAction: "Get Started",
+				},
 			}),
 		}),
 		// biome-ignore lint/suspicious/noExplicitAny: mock for testing
