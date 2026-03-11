@@ -1,6 +1,5 @@
 "use client";
 
-import type { Trend } from "@/lib/api";
 import {
 	CartesianGrid,
 	Line,
@@ -12,7 +11,8 @@ import {
 } from "recharts";
 
 interface TrendChartProps {
-	data: Trend[];
+	data: Record<string, unknown>[];
+	xKey?: string;
 	dataKey?: string;
 	label?: string;
 	color?: string;
@@ -20,6 +20,7 @@ interface TrendChartProps {
 
 export function TrendChart({
 	data,
+	xKey = "date",
 	dataKey = "avgScore",
 	label = "Avg Score",
 	color = "#3b82f6",
@@ -30,7 +31,7 @@ export function TrendChart({
 				<LineChart data={data}>
 					<CartesianGrid strokeDasharray="3 3" stroke="#404040" />
 					<XAxis
-						dataKey="date"
+						dataKey={xKey}
 						tick={{ fill: "#a3a3a3", fontSize: 12 }}
 						stroke="#525252"
 					/>

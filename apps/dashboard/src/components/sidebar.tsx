@@ -1,7 +1,13 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { BarChart3, FileText, Home, TrendingUp } from "lucide-react";
+import {
+	BarChart3,
+	DollarSign,
+	FileText,
+	Home,
+	TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,6 +15,7 @@ const navItems = [
 	{ href: "/", label: "Campaigns", icon: Home },
 	{ href: "/ads", label: "Ads", icon: FileText },
 	{ href: "/trends", label: "Trends", icon: TrendingUp },
+	{ href: "/analytics", label: "Analytics", icon: DollarSign },
 ];
 
 export function Sidebar() {

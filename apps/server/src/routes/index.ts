@@ -1,4 +1,5 @@
 export { adRoutes } from "./ads.js";
+export { analyticsRoutes } from "./analytics.js";
 export { briefRoutes } from "./briefs.js";
 export { campaignRoutes } from "./campaigns.js";
 export { competitorAdRoutes } from "./competitor-ads.js";

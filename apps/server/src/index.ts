@@ -5,6 +5,7 @@ import { Elysia } from "elysia";
 import { setupDatabase } from "./db.js";
 import {
 	adRoutes,
+	analyticsRoutes,
 	briefRoutes,
 	campaignRoutes,
 	competitorAdRoutes,
@@ -27,6 +28,7 @@ const app = new Elysia()
 	.use(cors())
 	.get("/health", () => ({ status: "ok" }))
 	.use(adRoutes(db))
+	.use(analyticsRoutes(db))
 	.use(briefRoutes(db))
 	.use(evaluationRoutes(db))
 	.use(pipelineRoutes(db))

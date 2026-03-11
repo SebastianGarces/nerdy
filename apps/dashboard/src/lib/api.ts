@@ -226,3 +226,78 @@ export function useAddCreatives(id: string) {
 		},
 	});
 }
+
+// Analytics interfaces
+export interface AnalyticsSummary {
+	totalAds: number;
+	publishedAds: number;
+	totalTokens: number;
+	totalCost: number;
+	avgPublishedScore: number;
+	costPerAd: number;
+	costPerPassingAd: number;
+	qualityPerDollar: number;
+}
+
+export interface CostOverTime {
+	date: string;
+	dailyCost: number;
+	dailyTokens: number;
+	operationCount: number;
+}
+
+export interface CostByOperation {
+	operation: string;
+	totalCost: number;
+	totalTokens: number;
+	count: number;
+}
+
+export interface EfficiencyOverTime {
+	date: string;
+	dailyCost: number;
+	avgScore: number;
+	costPerQualityPoint: number;
+}
+
+export interface IterationCostData {
+	iterations: Array<{ iteration: number; adCount: number }>;
+	costByOperation: Array<{ operation: string; avgCost: number }>;
+}
+
+export function useAnalyticsSummary() {
+	return useQuery<AnalyticsSummary>({
+		queryKey: ["analytics-summary"],
+		queryFn: () => fetchApi<AnalyticsSummary>("/api/analytics/summary"),
+	});
+}
+
+export function useCostOverTime() {
+	return useQuery<CostOverTime[]>({
+		queryKey: ["analytics-cost-over-time"],
+		queryFn: () => fetchApi<CostOverTime[]>("/api/analytics/cost-over-time"),
+	});
+}
+
+export function useCostByOperation() {
+	return useQuery<CostByOperation[]>({
+		queryKey: ["analytics-cost-by-operation"],
+		queryFn: () =>
+			fetchApi<CostByOperation[]>("/api/analytics/cost-by-operation"),
+	});
+}
+
+export function useEfficiencyOverTime() {
+	return useQuery<EfficiencyOverTime[]>({
+		queryKey: ["analytics-efficiency-over-time"],
+		queryFn: () =>
+			fetchApi<EfficiencyOverTime[]>("/api/analytics/efficiency-over-time"),
+	});
+}
+
+export function useIterationCost() {
+	return useQuery<IterationCostData>({
+		queryKey: ["analytics-iteration-cost"],
+		queryFn: () => fetchApi<IterationCostData>("/api/analytics/iteration-cost"),
+	});
+}
