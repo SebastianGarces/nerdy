@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { eq } from "drizzle-orm";
 import type { createDb } from "../db/index.js";
 import { competitorAds } from "../db/schema.js";
 import type { CompetitorAd } from "../types/index.js";
@@ -13,7 +14,9 @@ interface ScrapedAdsFile {
 
 /**
  * Import scraped ads from a JSON file into the database.
- * Returns the count of inserted ads.
+ * Deduplicates by advertiser+headline composite key.
+ * If a duplicate exists with a shorter durationDays, updates it.
+ * Returns the count of newly inserted ads.
  */
 export async function importScrapedAds(
 	filePath: string,
@@ -22,7 +25,36 @@ export async function importScrapedAds(
 	const raw = readFileSync(filePath, "utf-8");
 	const data: ScrapedAdsFile = JSON.parse(raw);
 
+	// Load existing ads and build dedup set
+	const existing = db.select().from(competitorAds).all();
+	const existingMap = new Map<string, (typeof existing)[number]>();
+	for (const row of existing) {
+		const key = `${row.advertiser}::${row.headline}`;
+		existingMap.set(key, row);
+	}
+
+	let insertedCount = 0;
+
 	for (const ad of data.ads) {
+		const key = `${ad.advertiser}::${ad.headline}`;
+		const existingAd = existingMap.get(key);
+
+		if (existingAd) {
+			// Update if new ad has longer duration
+			if (ad.durationDays > existingAd.durationDays) {
+				db.update(competitorAds)
+					.set({
+						durationDays: ad.durationDays,
+						endDate: ad.endDate,
+						scrapedAt: ad.scrapedAt,
+					})
+					.where(eq(competitorAds.id, existingAd.id))
+					.run();
+			}
+			// Skip insert — it's a duplicate
+			continue;
+		}
+
 		db.insert(competitorAds)
 			.values({
 				id: ad.id,
@@ -37,7 +69,10 @@ export async function importScrapedAds(
 				scrapedAt: ad.scrapedAt,
 			})
 			.run();
+
+		existingMap.set(key, ad as unknown as (typeof existing)[number]);
+		insertedCount++;
 	}
 
-	return data.ads.length;
+	return insertedCount;
 }

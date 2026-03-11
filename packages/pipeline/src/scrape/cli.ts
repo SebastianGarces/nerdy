@@ -24,6 +24,7 @@ function parseArgs(argv: string[]): {
 	useStdout: boolean;
 	usedAll: boolean;
 	importPath: string | null;
+	calibrate: boolean;
 } {
 	const args = argv.slice(2);
 	const advertisers: string[] = [];
@@ -32,12 +33,16 @@ function parseArgs(argv: string[]): {
 	let useStdout = false;
 	let usedAll = false;
 	let importPath: string | null = null;
+	let calibrate = false;
 
 	let i = 0;
 	while (i < args.length) {
 		const arg = args[i];
 
-		if (arg === "--import" && i + 1 < args.length) {
+		if (arg === "--calibrate") {
+			calibrate = true;
+			i += 1;
+		} else if (arg === "--import" && i + 1 < args.length) {
 			importPath = args[i + 1] as string;
 			i += 2;
 		} else if (arg === "--advertiser" && i + 1 < args.length) {
@@ -79,6 +84,7 @@ Options:
   --advertiser <name>       Advertiser to scrape (can be repeated)
   --all                     Scrape all known competitors
   --import <filePath>       Import scraped ads from a JSON file into the DB
+  --calibrate               Run full calibration on all competitor ads in DB
   --output, -o <path>       Custom output file path
   --stdout                  Print JSON to stdout instead of writing a file
   --headless <true|false>   Run headless (default: true)
@@ -98,14 +104,22 @@ Output:
 		}
 	}
 
-	if (advertisers.length === 0 && !importPath) {
+	if (advertisers.length === 0 && !importPath && !calibrate) {
 		console.error(
-			"Error: specify --advertiser <name>, --all, or --import <path>. Use --help for usage.",
+			"Error: specify --advertiser <name>, --all, --import <path>, or --calibrate. Use --help for usage.",
 		);
 		process.exit(1);
 	}
 
-	return { advertisers, config, outputPath, useStdout, usedAll, importPath };
+	return {
+		advertisers,
+		config,
+		outputPath,
+		useStdout,
+		usedAll,
+		importPath,
+		calibrate,
+	};
 }
 
 function slugify(name: string): string {
@@ -123,8 +137,36 @@ function formatTimestamp(date: Date): string {
 }
 
 async function main() {
-	const { advertisers, config, outputPath, useStdout, usedAll, importPath } =
-		parseArgs(process.argv);
+	const {
+		advertisers,
+		config,
+		outputPath,
+		useStdout,
+		usedAll,
+		importPath,
+		calibrate,
+	} = parseArgs(process.argv);
+
+	if (calibrate) {
+		const { createDb } = await import("../db/index.js");
+		const { competitorAds } = await import("../db/schema.js");
+		const { runFullCalibration, writeCalibrationReport } = await import(
+			"../evaluate/calibrate.js"
+		);
+		const dbPath =
+			process.env.DATABASE_URL ?? "./apps/server/data/nerdy.sqlite";
+		const db = createDb(dbPath);
+		const allAds = db.select().from(competitorAds).all();
+		const pipelineConfig = {
+			openRouterApiKey: process.env.OPENROUTER_API_KEY ?? "",
+			openRouterBaseUrl:
+				process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
+		};
+		const report = await runFullCalibration(allAds, pipelineConfig);
+		const path = writeCalibrationReport(report, "data/calibration");
+		console.error(`Report written to ${path}`);
+		process.exit(report.passed ? 0 : 1);
+	}
 
 	if (importPath) {
 		const { createDb } = await import("../db/index.js");
