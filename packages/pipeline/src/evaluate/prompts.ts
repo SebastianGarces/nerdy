@@ -35,56 +35,58 @@ Varsity Tutors brand voice is:
 
 ## Few-Shot Examples
 
-### Example 1 — Good Ad (Expected Score ~8.0)
+The following examples are from real ads scored during calibration against scraped competitor data from the Meta Ad Library.
 
-**Brief**: Audience: parent | Product: 1-on-1 Math Tutoring | Goal: conversion | Emotional Angle: aspiration
-**Ad**:
-- Primary Text: "Your child's math struggles don't define their future. With a dedicated Varsity Tutors math expert, they'll build confidence problem by problem — and you'll see the difference in their next report card."
-- Headline: "1-on-1 Math Tutoring That Gets Results"
-- Description: "Personalized sessions with expert tutors. 98% of parents see grade improvement within 3 months."
-- CTA: "Start a Free Session"
+### Example 1 — Good Ad (Expected Score ~7.8)
+
+**Brief**: Audience: parent | Product: SAT Prep | Goal: conversion | Emotional Angle: aspiration
+**Ad** (Source: Varsity Tutors, Meta Ad Library):
+- Primary Text: "From 1010 to 1370 in Just 2 Months 🎓\n📈 \"My daughter's SAT score jumped from 1010 to 1370 in just 2 months with Varsity Tutors' 1:1 tutoring.\" \"She uses her sessions for SAT prep — and sometimes even for her AP classes when she needs extra help. I love that we can schedule each week around her busy school schedule.\" If your child is aiming for a great college, this program is a game changer. 👉 Fill out the quick form, and an SAT-prep expert will call right away to match your child with the right tutor."
+- Headline: "Her SAT Score Jumped 360 Points! 📈"
+- Description: ""
+- CTA: "Learn More"
 
 **Evaluation**:
-- clarity: 9 — Message is immediately clear: struggling kids can improve with personal tutoring.
-- valueProposition: 8 — Specific benefit (report card improvement) with a stat to back it up. Could differentiate more from competitors.
-- callToAction: 8 — "Start a Free Session" is low-friction and compelling. Good urgency without pressure.
-- brandVoice: 8 — Empowering tone ("don't define their future"), knowledgeable, results-focused with the stat.
-- emotionalResonance: 8 — Taps into parental anxiety about math struggles and aspiration for their child's future.
+- clarity: 9 — The ad copy is very clear, presenting a specific and impressive result (360-point SAT score increase) in the headline and primary text.
+- valueProposition: 8 — Strong value proposition with a significant SAT score improvement and scheduling flexibility. The mention of using sessions for both SAT prep and AP classes adds value.
+- callToAction: 6 — "Learn More" is generic and doesn't create urgency or connect to a specific offer like a free session.
+- brandVoice: 8 — Aligns well with the brand voice — professional with SAT scores and college aspirations, approachable with testimonial and conversational language.
+- emotionalResonance: 8 — Effectively taps into parental aspirations for college success and anxieties about SAT scores. The testimonial adds credibility and emotional impact.
 - confidence: 0.9
 
 ### Example 2 — Mediocre Ad (Expected Score ~6.0)
 
-**Brief**: Audience: parent | Product: Online Tutoring | Goal: conversion | Emotional Angle: anxiety-relief
-**Ad**:
-- Primary Text: "Worried about your child's grades? Varsity Tutors connects you with expert tutors who can help them improve. Our personalized approach means your child gets the attention they need to succeed."
-- Headline: "Expert Tutoring for Better Grades"
-- Description: "Get matched with a qualified tutor today and see results."
-- CTA: "Get Started"
-
-**Evaluation**:
-- clarity: 7 — Message is understandable but not instantly compelling. Takes a moment to parse.
-- valueProposition: 5 — "Personalized approach" and "attention they need" are vague platitudes. No specific outcome, stat, or differentiator. Could be any tutoring company.
-- callToAction: 6 — "Get Started" is acceptable but generic. Doesn't connect to the anxiety-relief angle or create urgency.
-- brandVoice: 6 — Generally appropriate tone but lacks the empowering, results-focused energy of the brand. Reads more like a template.
-- emotionalResonance: 6 — Opens with anxiety ("worried") but doesn't deepen it or provide a satisfying resolution. The relief feels shallow.
-- confidence: 0.88
-
-### Example 3 — Poor Ad (Expected Score ~4.0)
-
-**Brief**: Audience: student | Product: SAT Prep Course | Goal: awareness | Emotional Angle: urgency
-**Ad**:
-- Primary Text: "SAT prep is available now. We have tutors who can help you study for the SAT. Our platform has many features and options for test preparation."
-- Headline: "SAT Prep Available"
-- Description: "Sign up for SAT tutoring services today."
+**Brief**: Audience: parent | Product: online tutoring platform | Goal: conversion | Emotional Angle: aspiration
+**Ad** (Source: Kumon, Meta Ad Library — 41 days active):
+- Primary Text: "Both promise better grades and stronger skills. But only one actually delivered.\nHere's are our honest thoughts (and what we wish we knew sooner): 👇\nBook Your Free Assessment"
+- Headline: "We tested both Kumon and Mathnasium - and the difference shocked us."
+- Description: ""
 - CTA: "Learn More"
 
 **Evaluation**:
-- clarity: 5 — Understandable but vague. No specific promise or hook.
-- valueProposition: 3 — Completely generic. "Many features and options" says nothing. No differentiation.
-- callToAction: 4 — "Learn More" is weak and lacks urgency. Doesn't match the urgency angle in the brief.
-- brandVoice: 4 — Flat and corporate. Not empowering or approachable. Reads like a placeholder.
-- emotionalResonance: 3 — No emotional connection. Doesn't tap into test anxiety or aspiration. Just states facts.
+- clarity: 6 — The ad is intriguing but slightly confusing at first glance. The "both" in the primary text is unclear without further context.
+- valueProposition: 6 — Hints at a comparison and a shocking difference, but doesn't explicitly state the benefit. Relies on curiosity rather than a clear value proposition.
+- callToAction: 4 — "Learn More" is generic and doesn't connect to the free assessment offer mentioned in the primary text.
+- brandVoice: 7 — Relatively approachable and professional tone. The "honest thoughts" phrasing adds authenticity.
+- emotionalResonance: 7 — Taps into parental aspiration by suggesting a superior solution. The "shocked us" hook creates curiosity.
 - confidence: 0.85
+
+### Example 3 — Poor Ad (Expected Score ~3.5)
+
+**Brief**: Audience: parent | Product: online tutoring platform | Goal: conversion | Emotional Angle: aspiration
+**Ad** (Source: Tutor.com, Meta Ad Library — 42 days active):
+- Primary Text: "*From a Preply study.\n0:00 / 0:35\nLearning that fits you.\nStill not sure? You can try 2 more tutors for free. Find your better duo for 2026. 👯‍♂️"
+- Headline: "99% of English learners say their lessons were personalized.*"
+- Description: ""
+- CTA: "Learn More"
+
+**Evaluation**:
+- clarity: 4 — Confusing. Starts with "From a Preply study" then shifts to a different message about finding a tutor for 2026. Disjointed.
+- valueProposition: 3 — Weak. Mentions personalized lessons and trying tutors for free, but doesn't articulate unique benefits. The "2026" reference is unclear.
+- callToAction: 4 — "Learn More" is generic, lacks urgency, and doesn't connect to the free trial offer.
+- brandVoice: 4 — Inconsistent. The Preply study reference and casual emoji use feel neither professional nor approachable. Less trustworthy.
+- emotionalResonance: 3 — Fails to create an emotional connection. Doesn't tap into aspiration or parental concerns. The "2026" angle is confusing.
+- confidence: 0.8
 
 ## Output Format
 

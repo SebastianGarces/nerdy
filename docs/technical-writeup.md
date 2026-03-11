@@ -43,7 +43,7 @@ The evaluation prompt includes three few-shot examples (a good ad scoring ~8.0, 
 - **Test coverage**: 158 tests across 16 test files covering types, generation, evaluation, iteration, graph, scraper, database, API routes, campaigns, brief generation, and token tracking.
 - **Quality gates**: All three gates pass consistently -- Biome lint (zero violations), TypeScript strict mode (zero errors across 3 workspaces), and bun test (all passing).
 - **Brief matrix**: 1,152 unique brief combinations available via combinatorial generation, with LLM-powered `promptToBriefs` as the primary brief creation method for campaign-driven workflows.
-- **Competitive calibration**: Evaluator calibrated against 35 scraped competitor ads from Meta Ad Library (Varsity Tutors, Wyzant, Tutor.com, Khan Academy, Chegg, Kumon). Varsity Tutors ads scored in the 7-9 range; shorter generic competitor ads scored 4-6, validating the evaluator's discrimination ability.
+- **Competitive calibration**: Evaluator calibrated against 63 scraped competitor ads from Meta Ad Library across 6 advertisers (Varsity Tutors, Kumon, Chegg, Tutor.com, Wyzant, Khan Academy). Ads were tiered by duration as a quality proxy (high: 65d avg, mid: 31d avg, low: 7d avg). Key finding: a negative correlation (-0.149) between ad duration and evaluator score reveals that the evaluator measures VT brand alignment rather than universal ad quality. VT ads scored highest (avg 5.31); long-running competitor ads scored lower (avg 4.48) despite real-world longevity. Franchise/spam ads correctly scored 1.0-1.6. Few-shot examples were updated from synthetic to real competitor ads. See [ADR 0006](../decisions/0006-calibration-with-duration-proxy.md).
 
 ## Limitations
 

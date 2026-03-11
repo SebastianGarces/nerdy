@@ -67,7 +67,8 @@ export function IterationTimeline({
 					const isFinal = iter === currentIteration;
 					const score = entry.evaluation?.weightedScore ?? null;
 					// Previous iteration is next in the reversed array
-					const prevEntry = idx < allEntries.length - 1 ? allEntries[idx + 1] : undefined;
+					const prevEntry =
+						idx < allEntries.length - 1 ? allEntries[idx + 1] : undefined;
 					const prevScore = prevEntry?.evaluation?.weightedScore ?? null;
 					const delta =
 						score !== null && prevScore !== null ? score - prevScore : null;

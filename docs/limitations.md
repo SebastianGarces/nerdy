@@ -30,6 +30,19 @@ The evaluator uses a single LLM (Gemini 2.0 Flash) as judge, which introduces se
 - **Competitor data staleness**: Scraped competitor ads are point-in-time snapshots with no automated refresh schedule.
 - **Brand voice rigidity**: The Varsity Tutors brand voice is hardcoded in prompts. Adapting to a different brand requires changing multiple prompt files.
 
+## Calibration Findings
+
+We calibrated the evaluator against 63 real competitor ads scraped from the Meta Ad Library across 6 advertisers (Varsity Tutors, Kumon, Chegg, Tutor.com, Wyzant, Khan Academy). Ads were tiered by duration as a quality proxy: high (65d avg), mid (31d avg), low (7d avg). Key findings:
+
+- **Negative duration-score correlation (-0.149)**: Longer-running ads scored *lower*, not higher. This contradicts the assumption that ad longevity signals quality. The evaluator measures brand alignment with Varsity Tutors, not universal ad quality.
+- **Brand voice bias dominates**: Varsity Tutors ads (low tier, 3-5 days old) scored highest (avg 5.31) because the evaluator is tuned for VT brand voice. Long-running competitor ads (Kumon, Tutor.com) averaged 4.48 — lower because they don't match VT's tone, even though their longevity suggests real-world effectiveness.
+- **Franchise/spam ads correctly flagged**: Recruitment and franchise ads scored 1.0-1.6, showing the evaluator reliably identifies non-tutoring content. However, these ads add noise to duration-based analysis since they are long-running but not real tutoring ads.
+- **Small sample size**: 63 ads across 6 advertisers is too small to draw statistically significant conclusions about correlation. The -0.149 correlation could shift meaningfully with more data.
+- **57% pass rate on competitor ads**: Many real competitor ads fall below the 7.5 threshold, which is expected — the evaluator is calibrated for VT brand voice, not generic tutoring copy.
+- **Few-shot examples grounded in real ads**: The evaluator's few-shot examples were updated from synthetic to real competitor ads from this calibration. This improves scoring anchors but still reflects VT brand bias in example selection.
+
+The core takeaway: the evaluator is a brand alignment scorer, not a universal ad quality scorer. This is useful for its intended purpose (generating on-brand VT ads) but limits its value as an objective quality benchmark. See [ADR 0006](../decisions/0006-calibration-with-duration-proxy.md).
+
 ## Failed Approaches
 
 ### better-sqlite3 Native Bindings
