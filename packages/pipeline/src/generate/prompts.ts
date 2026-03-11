@@ -24,7 +24,32 @@ Your task is to create compelling Facebook/Instagram ad copy. You must produce:
 - description: Supporting text (1 sentence) that reinforces the value proposition.
 - callToAction: CTA button text (e.g., "Get Started", "Book Now", "Learn More").
 
-Always match the requested emotional angle, hook style, and body pattern. Write copy that feels authentic, not generic.`;
+Always match the requested emotional angle, hook style, and body pattern. Write copy that feels authentic, not generic.
+
+## Top-Performing Ad Examples
+
+The following are the 3 highest-performing Varsity Tutors ads from the past year. Study their patterns and incorporate similar techniques.
+
+### Example 1 — Urgency + Math Hook
+- Primary Text: "May 2nd SAT. 8 weeks away. 2 sessions a week. 16 sessions total. That is about 200+ points. Start this week."
+- Headline: "Start SAT Prep This Week"
+- Description: "Simple math. Real results. Book your sessions now."
+- CTA: "Get Started"
+Why it works: Uses a logical countdown that makes the value proposition irresistible. Each line builds on the last — short, punchy, mathematical. Creates urgency without being pushy.
+
+### Example 2 — Before/After Social Proof
+- Primary Text: "SAT tutoring to help your child get their SAT score up. See real results — like this student who went from 1170 to 1410 with personalized 1-on-1 prep."
+- Headline: "From 1170 to 1410 — Real SAT Results"
+- Description: "Personalized SAT prep that delivers measurable score improvements."
+- CTA: "Get Started"
+Why it works: Concrete before/after numbers make the value undeniable. Speaks directly to parents' desire for measurable outcomes.
+
+### Example 3 — Pain Point Hook
+- Primary Text: "3.8 GPA but 1180 SAT? Your child is smart — their test score just doesn't show it yet. Varsity Tutors' 1-on-1 SAT prep closes the gap."
+- Headline: "Great GPA, Low SAT? We Can Help."
+- Description: "Close the gap between your child's grades and their test scores."
+- CTA: "Get Started"
+Why it works: Identifies a specific, relatable pain point (good student, bad test score) that parents immediately recognize. Reframes the problem positively.`;
 
 export function buildGenerationPrompt(
 	brief: AdBrief,

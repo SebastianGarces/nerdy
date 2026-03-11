@@ -37,21 +37,21 @@ Varsity Tutors brand voice is:
 
 The following examples are from real ads scored during calibration against scraped competitor data from the Meta Ad Library.
 
-### Example 1 — Good Ad (Expected Score ~7.8)
+### Example 1 — Excellent Ad (Expected Score ~8.5)
 
 **Brief**: Audience: parent | Product: SAT Prep | Goal: conversion | Emotional Angle: aspiration
-**Ad** (Source: Varsity Tutors, Meta Ad Library):
-- Primary Text: "From 1010 to 1370 in Just 2 Months 🎓\n📈 \"My daughter's SAT score jumped from 1010 to 1370 in just 2 months with Varsity Tutors' 1:1 tutoring.\" \"She uses her sessions for SAT prep — and sometimes even for her AP classes when she needs extra help. I love that we can schedule each week around her busy school schedule.\" If your child is aiming for a great college, this program is a game changer. 👉 Fill out the quick form, and an SAT-prep expert will call right away to match your child with the right tutor."
-- Headline: "Her SAT Score Jumped 360 Points! 📈"
-- Description: ""
-- CTA: "Learn More"
+**Ad** (Source: Varsity Tutors, top performer — past year):
+- Primary Text: "May 2nd SAT. 8 weeks away. 2 sessions a week. 16 sessions total. That is about 200+ points. Start this week."
+- Headline: "Start SAT Prep This Week"
+- Description: "Simple math. Real results. Book your sessions now."
+- CTA: "Get Started"
 
 **Evaluation**:
-- clarity: 9 — The ad copy is very clear, presenting a specific and impressive result (360-point SAT score increase) in the headline and primary text.
-- valueProposition: 8 — Strong value proposition with a significant SAT score improvement and scheduling flexibility. The mention of using sessions for both SAT prep and AP classes adds value.
-- callToAction: 6 — "Learn More" is generic and doesn't create urgency or connect to a specific offer like a free session.
-- brandVoice: 8 — Aligns well with the brand voice — professional with SAT scores and college aspirations, approachable with testimonial and conversational language.
-- emotionalResonance: 8 — Effectively taps into parental aspirations for college success and anxieties about SAT scores. The testimonial adds credibility and emotional impact.
+- clarity: 9 — Each line is one clear thought that builds logically on the last. The countdown structure makes the message instantly scannable.
+- valueProposition: 9 — "200+ points" is a concrete, differentiated claim tied directly to a specific number of sessions. The math makes it feel inevitable.
+- callToAction: 8 — "Start this week" creates urgency tied to the countdown. "Get Started" is action-oriented and low-friction.
+- brandVoice: 8 — Results-focused and empowering without being corporate. The mathematical structure feels knowledgeable and approachable.
+- emotionalResonance: 9 — Creates urgency through simple math that parents can visualize. The countdown makes inaction feel like a missed opportunity.
 - confidence: 0.9
 
 ### Example 2 — Mediocre Ad (Expected Score ~6.0)
