@@ -33,11 +33,28 @@ export function IterationTimeline({
 	iterations,
 	iterationLogs,
 }: IterationTimelineProps) {
-	const [expanded, setExpanded] = useState<number | null>(null);
+	const [expanded, setExpanded] = useState<Set<number>>(new Set());
+
+	const toggleExpanded = (iter: number) => {
+		setExpanded((prev) => {
+			const next = new Set(prev);
+			if (next.has(iter)) next.delete(iter);
+			else next.add(iter);
+			return next;
+		});
+	};
 
 	const previous = iterations.filter(
 		(entry) => entry.ad.iteration < currentIteration,
 	);
+
+	// Include the current/final ad
+	const currentEntry = iterations.find(
+		(entry) => entry.ad.iteration === currentIteration,
+	);
+	const allEntries = currentEntry
+		? [...previous, currentEntry].reverse()
+		: [...previous].reverse();
 
 	if (previous.length === 0) return null;
 
@@ -45,30 +62,36 @@ export function IterationTimeline({
 		<div className="mt-8 rounded-xl border border-neutral-800 bg-neutral-900 p-6">
 			<h2 className="mb-6 text-lg font-semibold">Iteration History</h2>
 			<div className="relative ml-4 border-l-2 border-neutral-700 pl-6">
-				{previous.map((entry, idx) => {
+				{allEntries.map((entry, idx) => {
 					const iter = entry.ad.iteration;
+					const isFinal = iter === currentIteration;
 					const score = entry.evaluation?.weightedScore ?? null;
-					const prev = idx > 0 ? previous[idx - 1] : undefined;
-					const prevScore = prev?.evaluation?.weightedScore ?? null;
+					// Previous iteration is next in the reversed array
+					const prevEntry = idx < allEntries.length - 1 ? allEntries[idx + 1] : undefined;
+					const prevScore = prevEntry?.evaluation?.weightedScore ?? null;
 					const delta =
 						score !== null && prevScore !== null ? score - prevScore : null;
 					const log = iterationLogs.find((l) => l.iteration === iter);
-					const isExpanded = expanded === iter;
+					const isExpanded = expanded.has(iter);
 					const dimensions = (entry.evaluation?.dimensions ??
 						[]) as DimensionScore[];
 
 					return (
 						<div key={entry.ad.id} className="relative mb-6 last:mb-0">
 							{/* Timeline dot */}
-							<div className="absolute -left-[33px] top-1 h-4 w-4 rounded-full border-2 border-neutral-700 bg-neutral-900" />
+							<div
+								className={`absolute -left-[33px] top-1 h-4 w-4 rounded-full border-2 ${isFinal ? "border-blue-500 bg-blue-500" : "border-neutral-700 bg-neutral-900"}`}
+							/>
 
 							{/* Collapsed row */}
 							<button
 								type="button"
-								onClick={() => setExpanded(isExpanded ? null : iter)}
+								onClick={() => toggleExpanded(iter)}
 								className="flex w-full items-center gap-3 text-left"
 							>
-								<span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-xs font-bold text-neutral-300">
+								<span
+									className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isFinal ? "bg-blue-500/20 text-blue-400" : "bg-neutral-800 text-neutral-300"}`}
+								>
 									{iter}
 								</span>
 
@@ -94,7 +117,11 @@ export function IterationTimeline({
 									</span>
 								)}
 
-								{log ? (
+								{isFinal ? (
+									<span className="rounded-md bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 text-xs font-medium text-blue-400">
+										Final
+									</span>
+								) : log ? (
 									<span className="inline-flex items-center gap-1 rounded-md bg-neutral-800 px-2 py-0.5 text-xs text-neutral-400">
 										<Target className="h-3 w-3" />
 										{log.weakestDimension}
