@@ -1,17 +1,20 @@
 # Active Context: Nerdy Ad Engine
 
 ## Current Phase
-Pipeline validated with real LLM API. Generating real ads end-to-end.
+Pipeline mature with 353 published ads across 9 campaigns. Dashboard polished with animations.
 
 ## Just Completed
-- Real pipeline run: 47 briefs → 72 ads, avg score 7.46, 93% >= 7.0, 100% >= 6.0
-- Campaign creation via promptToBriefs working end-to-end with OpenRouter/Gemini 2.0 Flash
-- Memory bank and docs synced to match actual codebase state
+- Ad detail dialog with shared layout animations (motion/framer-motion v12+)
+- CreativeCard refactored: content/wrapper split, button mode with layoutId
+- Iteration timeline improved: multi-expand, final iteration badge, reversed order
+- ADR 0005: quality threshold 7.5 + evaluator bias fix (tough-critic, temp 0, 3 few-shot)
+- Technical writeup updated with real DB stats (353 published, 98.6% pass rate, avg 7.66)
+- Progress.md and docs synced to current state
 
 ## Quality Gates
-- Biome: 0 violations (77 files)
+- Biome: 0 violations
 - TypeScript: 0 errors (all 3 workspaces)
-- Tests: 133 pass, 0 fail (18 test files)
+- Tests: 158 pass, 0 fail (16 test files)
 
 ## Key Architecture Notes
 - Root tsconfig is base-only — typecheck runs tsc per-workspace
@@ -30,7 +33,7 @@ Pipeline validated with real LLM API. Generating real ads end-to-end.
 - Campaign detail page polls every 3s while status is "generating"
 
 ## Next Steps
-1. Update technical-writeup Results section with real pipeline numbers
+1. Upgrade Next.js from 15 to 16
 2. Run Meta Ad Library scraper for competitive intelligence (+10 bonus)
 3. Verify dashboard trend charts and token_usage tracking with real data
 4. Docker deployment verification
