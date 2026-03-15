@@ -134,6 +134,7 @@ export interface Evaluation {
 	confidence: number;
 	model: string;
 	tokensUsed: number;
+	latencyMs?: number;
 	createdAt: string;
 }
 

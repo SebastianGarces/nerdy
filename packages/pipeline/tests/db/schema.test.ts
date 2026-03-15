@@ -72,6 +72,7 @@ function createTestDb() {
 			confidence REAL NOT NULL,
 			model TEXT NOT NULL,
 			tokens_used INTEGER NOT NULL,
+			latency_ms INTEGER DEFAULT 0,
 			created_at TEXT NOT NULL
 		);
 
@@ -287,6 +288,7 @@ describe("Database schema", () => {
 				confidence: 0.9,
 				model: "gpt-4o",
 				tokensUsed: 300,
+				latencyMs: 450,
 				createdAt: new Date().toISOString(),
 			})
 			.run();
@@ -295,6 +297,7 @@ describe("Database schema", () => {
 		expect(rows).toHaveLength(1);
 		expect(rows[0]?.weightedScore).toBe(7.5);
 		expect(rows[0]?.confidence).toBe(0.9);
+		expect(rows[0]?.latencyMs).toBe(450);
 	});
 
 	test("insert and query iteration_logs", () => {

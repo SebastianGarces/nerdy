@@ -144,6 +144,30 @@ describe("evaluateAd", () => {
 		expect(dimensionNames).toContain("emotionalResonance");
 	});
 
+	it("should return latencyMs as a non-negative number", async () => {
+		const mockResponse = {
+			dimensions: [
+				{ dimension: "clarity", score: 8, rationale: "Clear" },
+				{ dimension: "valueProposition", score: 7, rationale: "Good" },
+				{ dimension: "callToAction", score: 9, rationale: "Strong" },
+				{ dimension: "brandVoice", score: 6, rationale: "OK" },
+				{ dimension: "emotionalResonance", score: 8, rationale: "Good" },
+			],
+			confidence: 0.85,
+		};
+
+		const result = await evaluateAd(
+			mockAd,
+			mockBrief,
+			mockConfig,
+			createMockLLM(mockResponse),
+		);
+
+		expect(result.latencyMs).toBeDefined();
+		expect(typeof result.latencyMs).toBe("number");
+		expect(result.latencyMs).toBeGreaterThanOrEqual(0);
+	});
+
 	it("should calculate correct weighted score", async () => {
 		const mockResponse = {
 			dimensions: [
@@ -251,6 +275,7 @@ describe("evaluateAd", () => {
 		expect(callCount).toBe(2); // initial + retry
 		expect(result.weightedScore).toBe(1.0);
 		expect(result.confidence).toBe(0);
+		expect(result.latencyMs).toBe(0);
 		expect(result.dimensions).toHaveLength(5);
 		for (const dim of result.dimensions) {
 			expect(dim.score).toBe(1);
