@@ -237,6 +237,27 @@ export interface AnalyticsSummary {
 	costPerAd: number;
 	costPerPassingAd: number;
 	qualityPerDollar: number;
+	avgLatencyMs: number;
+}
+
+export interface LatencyBucket {
+	avg: number;
+	p50: number;
+	p95: number;
+	count: number;
+}
+
+export interface LatencySummary {
+	generation: LatencyBucket;
+	evaluation: LatencyBucket;
+	endToEnd: LatencyBucket;
+}
+
+export interface LatencyOverTime {
+	date: string;
+	avgGenerationMs: number;
+	avgEvaluationMs: number;
+	adCount: number;
 }
 
 export interface CostOverTime {
@@ -299,5 +320,20 @@ export function useIterationCost() {
 	return useQuery<IterationCostData>({
 		queryKey: ["analytics-iteration-cost"],
 		queryFn: () => fetchApi<IterationCostData>("/api/analytics/iteration-cost"),
+	});
+}
+
+export function useLatencySummary() {
+	return useQuery<LatencySummary>({
+		queryKey: ["analytics-latency-summary"],
+		queryFn: () => fetchApi<LatencySummary>("/api/analytics/latency-summary"),
+	});
+}
+
+export function useLatencyOverTime() {
+	return useQuery<LatencyOverTime[]>({
+		queryKey: ["analytics-latency-over-time"],
+		queryFn: () =>
+			fetchApi<LatencyOverTime[]>("/api/analytics/latency-over-time"),
 	});
 }

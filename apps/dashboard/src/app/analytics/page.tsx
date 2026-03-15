@@ -2,6 +2,7 @@
 
 import { CostBreakdownChart } from "@/components/ui/cost-breakdown-chart";
 import { IterationCostChart } from "@/components/ui/iteration-cost-chart";
+import { LatencyChart } from "@/components/ui/latency-chart";
 import { TrendChart } from "@/components/ui/trend-chart";
 import {
 	useAnalyticsSummary,
@@ -9,6 +10,8 @@ import {
 	useCostOverTime,
 	useEfficiencyOverTime,
 	useIterationCost,
+	useLatencyOverTime,
+	useLatencySummary,
 } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
@@ -20,12 +23,19 @@ function formatNumber(value: number) {
 	return value.toLocaleString();
 }
 
+function formatLatency(ms: number) {
+	if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
+	return `${Math.round(ms)}ms`;
+}
+
 export default function AnalyticsPage() {
 	const { data: summary, isLoading, error } = useAnalyticsSummary();
 	const { data: costOverTime } = useCostOverTime();
 	const { data: costByOp } = useCostByOperation();
 	const { data: efficiency } = useEfficiencyOverTime();
 	const { data: iterationCost } = useIterationCost();
+	const { data: latencySummary } = useLatencySummary();
+	const { data: latencyOverTime } = useLatencyOverTime();
 
 	if (isLoading) {
 		return (
@@ -54,6 +64,10 @@ export default function AnalyticsPage() {
 		{ label: "Quality / $", value: summary.qualityPerDollar.toFixed(1) },
 		{ label: "Total Tokens", value: formatNumber(summary.totalTokens) },
 		{ label: "Total Cost", value: formatCost(summary.totalCost) },
+		{
+			label: "Avg Generation Latency",
+			value: formatLatency(summary.avgLatencyMs ?? 0),
+		},
 	];
 
 	return (
@@ -62,7 +76,7 @@ export default function AnalyticsPage() {
 
 			<div className="space-y-8">
 				{/* Summary stat cards */}
-				<div className="grid grid-cols-5 gap-4">
+				<div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
 					{statCards.map((stat) => (
 						<div
 							key={stat.label}
@@ -122,6 +136,49 @@ export default function AnalyticsPage() {
 						</div>
 					)}
 				</div>
+
+				{/* Latency Breakdown */}
+				{latencySummary && (
+					<>
+						<h2 className="text-lg font-semibold">Latency Breakdown</h2>
+						<div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
+							{(
+								[
+									["Generation", latencySummary.generation],
+									["Evaluation", latencySummary.evaluation],
+									["End-to-End", latencySummary.endToEnd],
+								] as const
+							).flatMap(([label, bucket]) => [
+								<div
+									key={`${label}-p50`}
+									className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-center"
+								>
+									<div className="text-sm text-neutral-400">{label} p50</div>
+									<div className="mt-1 text-2xl font-bold text-neutral-50">
+										{formatLatency(bucket.p50)}
+									</div>
+								</div>,
+								<div
+									key={`${label}-p95`}
+									className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-center"
+								>
+									<div className="text-sm text-neutral-400">{label} p95</div>
+									<div className="mt-1 text-2xl font-bold text-neutral-50">
+										{formatLatency(bucket.p95)}
+									</div>
+								</div>,
+							])}
+						</div>
+					</>
+				)}
+
+				{/* Latency Over Time chart */}
+				{latencyOverTime && latencyOverTime.length > 0 && (
+					<div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+						<h2 className="mb-4 text-lg font-semibold">Latency Over Time</h2>
+						<LatencyChart data={latencyOverTime} />
+					</div>
+				)}
 			</div>
 		</div>
 	);
