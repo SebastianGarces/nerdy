@@ -13,6 +13,7 @@ interface SummaryResponse {
 	costPerAd: number;
 	costPerPassingAd: number;
 	qualityPerDollar: number;
+	avgLatencyMs: number;
 }
 
 interface CostOverTimeEntry {
@@ -62,11 +63,11 @@ function seedTestData(sqlite: Database) {
 		INSERT INTO generated_ads (id, brief_id, primary_text, headline, description, call_to_action, model, prompt_tokens, completion_tokens, latency_ms, iteration, status, created_at)
 		VALUES ('ad-3', 'brief-1', 'Primary text 3', 'Headline 3', 'Description 3', 'CTA 3', 'gpt-4', 100, 50, 500, 2, 'generating', '2026-01-02T00:00:00Z');
 
-		INSERT INTO evaluations (id, ad_id, dimensions, weighted_score, confidence, model, tokens_used, created_at)
-		VALUES ('eval-1', 'ad-1', '[{"dimension":"clarity","score":8,"rationale":"Clear"}]', 8.0, 0.9, 'gpt-4', 200, '2026-01-01T00:00:00Z');
+		INSERT INTO evaluations (id, ad_id, dimensions, weighted_score, confidence, model, tokens_used, latency_ms, created_at)
+		VALUES ('eval-1', 'ad-1', '[{"dimension":"clarity","score":8,"rationale":"Clear"}]', 8.0, 0.9, 'gpt-4', 200, 300, '2026-01-01T00:00:00Z');
 
-		INSERT INTO evaluations (id, ad_id, dimensions, weighted_score, confidence, model, tokens_used, created_at)
-		VALUES ('eval-2', 'ad-2', '[{"dimension":"clarity","score":7,"rationale":"OK"}]', 7.0, 0.85, 'gpt-4', 200, '2026-01-02T00:00:00Z');
+		INSERT INTO evaluations (id, ad_id, dimensions, weighted_score, confidence, model, tokens_used, latency_ms, created_at)
+		VALUES ('eval-2', 'ad-2', '[{"dimension":"clarity","score":7,"rationale":"OK"}]', 7.0, 0.85, 'gpt-4', 200, 400, '2026-01-02T00:00:00Z');
 
 		INSERT INTO token_usage (id, operation, model, prompt_tokens, completion_tokens, total_tokens, cost_usd, created_at)
 		VALUES ('tok-1', 'generate', 'gpt-4', 100, 50, 150, 0.005, '2026-01-01T00:00:00Z');
@@ -117,6 +118,8 @@ describe("analytics routes", () => {
 			expect(body.costPerAd).toBeCloseTo(0.028 / 3, 5);
 			expect(body.costPerPassingAd).toBeCloseTo(0.028 / 2, 5);
 			expect(body.qualityPerDollar).toBeCloseTo(7.5 / 0.028, 2);
+			// avg latency: (500 + 500 + 500) / 3 = 500
+			expect(body.avgLatencyMs).toBe(500);
 		});
 	});
 
@@ -225,6 +228,72 @@ describe("analytics routes", () => {
 			}
 		});
 	});
+
+	describe("GET /api/analytics/latency-summary", () => {
+		it("should return latency statistics for generation, evaluation, and e2e", async () => {
+			const response = await app.handle(
+				new Request("http://localhost/api/analytics/latency-summary"),
+			);
+			expect(response.status).toBe(200);
+			const body = (await response.json()) as {
+				generation: {
+					avg: number;
+					p50: number;
+					p95: number;
+					count: number;
+				};
+				evaluation: {
+					avg: number;
+					p50: number;
+					p95: number;
+					count: number;
+				};
+				endToEnd: { avg: number; p50: number; p95: number; count: number };
+			};
+
+			// Generation: 3 ads, all 500ms
+			expect(body.generation.count).toBe(3);
+			expect(body.generation.avg).toBe(500);
+			expect(body.generation.p50).toBe(500);
+
+			// Evaluation: 2 evals with latency_ms 300, 400 (both > 0)
+			expect(body.evaluation.count).toBe(2);
+			expect(body.evaluation.avg).toBe(350);
+
+			// End-to-end: grouped by briefId (all same brief)
+			// brief-1: sum(gen latency) = 1500, sum(eval latency) = 700, total = 2200
+			expect(body.endToEnd.count).toBe(1);
+			expect(body.endToEnd.avg).toBe(2200);
+		});
+	});
+
+	describe("GET /api/analytics/latency-over-time", () => {
+		it("should return daily latency averages", async () => {
+			const response = await app.handle(
+				new Request("http://localhost/api/analytics/latency-over-time"),
+			);
+			expect(response.status).toBe(200);
+			const body = (await response.json()) as Array<{
+				date: string;
+				avgGenerationMs: number;
+				avgEvaluationMs: number;
+				adCount: number;
+			}>;
+			expect(body).toBeArray();
+			expect(body.length).toBe(2);
+
+			// Day 1: ad-1 (500ms gen), eval-1 (300ms eval), 1 ad
+			expect(body[0]?.date).toBe("2026-01-01");
+			expect(body[0]?.avgGenerationMs).toBe(500);
+			expect(body[0]?.avgEvaluationMs).toBe(300);
+			expect(body[0]?.adCount).toBe(1);
+
+			// Day 2: ad-2 (500ms gen, eval-2 400ms), ad-3 (500ms gen, no eval)
+			expect(body[1]?.date).toBe("2026-01-02");
+			expect(body[1]?.avgGenerationMs).toBe(500);
+			expect(body[1]?.adCount).toBe(2);
+		});
+	});
 });
 
 describe("analytics routes - empty database", () => {
@@ -242,7 +311,7 @@ describe("analytics routes - empty database", () => {
 		sqlite.close();
 	});
 
-	it("GET /api/analytics/summary should return zeroes", async () => {
+	it("GET /api/analytics/summary should return zeroes including avgLatencyMs", async () => {
 		const response = await app.handle(
 			new Request("http://localhost/api/analytics/summary"),
 		);
@@ -256,6 +325,7 @@ describe("analytics routes - empty database", () => {
 		expect(body.costPerAd).toBe(0);
 		expect(body.costPerPassingAd).toBe(0);
 		expect(body.qualityPerDollar).toBe(0);
+		expect(body.avgLatencyMs).toBe(0);
 	});
 
 	it("GET /api/analytics/cost-over-time should return empty array", async () => {
@@ -298,5 +368,38 @@ describe("analytics routes - empty database", () => {
 		expect(body.iterations.length).toBe(0);
 		expect(body.costByOperation).toBeArray();
 		expect(body.costByOperation.length).toBe(0);
+	});
+
+	it("GET /api/analytics/latency-summary should return zeroes", async () => {
+		const response = await app.handle(
+			new Request("http://localhost/api/analytics/latency-summary"),
+		);
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as {
+			generation: { avg: number; p50: number; p95: number; count: number };
+			evaluation: { avg: number; p50: number; p95: number; count: number };
+			endToEnd: { avg: number; p50: number; p95: number; count: number };
+		};
+		expect(body.generation.count).toBe(0);
+		expect(body.generation.avg).toBe(0);
+		expect(body.evaluation.count).toBe(0);
+		expect(body.evaluation.avg).toBe(0);
+		expect(body.endToEnd.count).toBe(0);
+		expect(body.endToEnd.avg).toBe(0);
+	});
+
+	it("GET /api/analytics/latency-over-time should return empty array", async () => {
+		const response = await app.handle(
+			new Request("http://localhost/api/analytics/latency-over-time"),
+		);
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as Array<{
+			date: string;
+			avgGenerationMs: number;
+			avgEvaluationMs: number;
+			adCount: number;
+		}>;
+		expect(body).toBeArray();
+		expect(body.length).toBe(0);
 	});
 });

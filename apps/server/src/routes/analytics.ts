@@ -1,7 +1,33 @@
 import { evaluations, generatedAds, tokenUsage } from "@nerdy/pipeline";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { Elysia } from "elysia";
 import type { AppDatabase } from "../db.js";
+
+function percentile(sorted: number[], p: number): number {
+	if (sorted.length === 0) return 0;
+	const index = (p / 100) * (sorted.length - 1);
+	const lower = Math.floor(index);
+	const upper = Math.ceil(index);
+	const lowerVal = sorted[lower] ?? 0;
+	const upperVal = sorted[upper] ?? 0;
+	if (lower === upper) return lowerVal;
+	const weight = index - lower;
+	return Math.round(lowerVal * (1 - weight) + upperVal * weight);
+}
+
+function computeStats(values: number[]) {
+	if (values.length === 0) {
+		return { avg: 0, p50: 0, p95: 0, count: 0 };
+	}
+	const sorted = [...values].sort((a, b) => a - b);
+	const sum = sorted.reduce((a, b) => a + b, 0);
+	return {
+		avg: Math.round(sum / sorted.length),
+		p50: percentile(sorted, 50),
+		p95: percentile(sorted, 95),
+		count: sorted.length,
+	};
+}
 
 export function analyticsRoutes(db: AppDatabase) {
 	return new Elysia({ prefix: "/api/analytics" })
@@ -30,6 +56,10 @@ export function analyticsRoutes(db: AppDatabase) {
 				.innerJoin(generatedAds, sql`${evaluations.adId} = ${generatedAds.id}`)
 				.where(sql`${generatedAds.status} = 'published'`);
 
+			const [latencyResult] = await db
+				.select({ avg: sql<number>`avg(latency_ms)` })
+				.from(generatedAds);
+
 			const totalAds = totalResult?.count ?? 0;
 			const publishedAds = publishedResult?.count ?? 0;
 			const totalTokens = tokenResult?.totalTokens ?? 0;
@@ -45,6 +75,7 @@ export function analyticsRoutes(db: AppDatabase) {
 				costPerAd: totalAds > 0 ? totalCost / totalAds : 0,
 				costPerPassingAd: publishedAds > 0 ? totalCost / publishedAds : 0,
 				qualityPerDollar: totalCost > 0 ? avgPublishedScore / totalCost : 0,
+				avgLatencyMs: Math.round(latencyResult?.avg ?? 0),
 			};
 		})
 		.get("/cost-over-time", async () => {
@@ -126,5 +157,58 @@ export function analyticsRoutes(db: AppDatabase) {
 				.orderBy(tokenUsage.operation);
 
 			return { iterations, costByOperation };
+		})
+		.get("/latency-summary", async () => {
+			const genRows = await db
+				.select({ latencyMs: generatedAds.latencyMs })
+				.from(generatedAds);
+			const genValues = genRows.map((r) => r.latencyMs);
+
+			const evalRows = await db
+				.select({ latencyMs: evaluations.latencyMs })
+				.from(evaluations);
+			const evalValues = evalRows
+				.map((r) => r.latencyMs)
+				.filter((v): v is number => v != null && v > 0);
+
+			const e2eRows = await db
+				.select({
+					briefId: generatedAds.briefId,
+					genLatency: sql<number>`sum(${generatedAds.latencyMs})`,
+					evalLatency: sql<number>`sum(${evaluations.latencyMs})`,
+				})
+				.from(generatedAds)
+				.leftJoin(evaluations, eq(evaluations.adId, generatedAds.id))
+				.groupBy(generatedAds.briefId);
+
+			const e2eValues = e2eRows.map(
+				(r) => (r.genLatency ?? 0) + (r.evalLatency ?? 0),
+			);
+
+			return {
+				generation: computeStats(genValues),
+				evaluation: computeStats(evalValues),
+				endToEnd: computeStats(e2eValues),
+			};
+		})
+		.get("/latency-over-time", async () => {
+			const rows = await db
+				.select({
+					date: sql<string>`date(${generatedAds.createdAt})`,
+					avgGenerationMs: sql<number>`avg(${generatedAds.latencyMs})`,
+					avgEvaluationMs: sql<number>`coalesce(avg(${evaluations.latencyMs}), 0)`,
+					adCount: sql<number>`count(distinct ${generatedAds.id})`,
+				})
+				.from(generatedAds)
+				.leftJoin(evaluations, eq(evaluations.adId, generatedAds.id))
+				.groupBy(sql`date(${generatedAds.createdAt})`)
+				.orderBy(sql`date(${generatedAds.createdAt})`);
+
+			return rows.map((r) => ({
+				date: r.date,
+				avgGenerationMs: Math.round(r.avgGenerationMs),
+				avgEvaluationMs: Math.round(r.avgEvaluationMs),
+				adCount: r.adCount,
+			}));
 		});
 }
