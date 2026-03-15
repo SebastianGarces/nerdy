@@ -1,0 +1,1 @@
+ALTER TABLE evaluations ADD COLUMN latency_ms integer DEFAULT 0;

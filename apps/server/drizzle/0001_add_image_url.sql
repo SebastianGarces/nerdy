@@ -1,0 +1,1 @@
+ALTER TABLE generated_ads ADD COLUMN image_url text;

@@ -136,6 +136,7 @@ export interface Evaluation {
 	tokensUsed: number;
 	promptTokens?: number;
 	completionTokens?: number;
+	latencyMs?: number;
 	createdAt: string;
 }
 

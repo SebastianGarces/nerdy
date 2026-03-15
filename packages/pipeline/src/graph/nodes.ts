@@ -103,6 +103,7 @@ export function createNodes(
 			confidence: evaluation.confidence,
 			model: evaluation.model,
 			tokensUsed: evaluation.tokensUsed,
+			latencyMs: evaluation.latencyMs ?? 0,
 			createdAt: evaluation.createdAt,
 		});
 

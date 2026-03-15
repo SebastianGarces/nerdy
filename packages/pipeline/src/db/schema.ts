@@ -86,6 +86,7 @@ export const evaluations = sqliteTable("evaluations", {
 	confidence: real("confidence").notNull(),
 	model: text("model").notNull(),
 	tokensUsed: integer("tokens_used").notNull(),
+	latencyMs: integer("latency_ms").default(0),
 	createdAt: text("created_at").notNull(),
 });
 

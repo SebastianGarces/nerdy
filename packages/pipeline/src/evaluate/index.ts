@@ -105,6 +105,8 @@ export async function evaluateAd(
 
 	let result: LLMResult;
 
+	const startTime = performance.now();
+
 	try {
 		result = await model.invoke(messages);
 	} catch (_error) {
@@ -116,6 +118,8 @@ export async function evaluateAd(
 			return createFallbackEvaluation(ad.id);
 		}
 	}
+
+	const latencyMs = Math.round(performance.now() - startTime);
 
 	// Validate the result has all 5 dimensions
 	const dimensionNames = new Set(result.dimensions.map((d) => d.dimension));
@@ -154,6 +158,7 @@ export async function evaluateAd(
 		tokensUsed,
 		promptTokens: result.tokensUsed?.promptTokens,
 		completionTokens: result.tokensUsed?.completionTokens,
+		latencyMs,
 		createdAt: new Date().toISOString(),
 	};
 }
@@ -183,6 +188,7 @@ function createFallbackEvaluation(adId: string): Evaluation {
 		confidence: 0,
 		model: EVALUATOR_MODEL,
 		tokensUsed: 0,
+		latencyMs: 0,
 		createdAt: new Date().toISOString(),
 	};
 }
