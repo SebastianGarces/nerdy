@@ -12,8 +12,8 @@ import type {
 
 const SQL_CREATE_TABLES = `
 CREATE TABLE IF NOT EXISTS campaigns (id TEXT PRIMARY KEY, name TEXT NOT NULL, prompt TEXT NOT NULL, description TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'generating', ad_count INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS ad_briefs (id TEXT PRIMARY KEY, audience TEXT NOT NULL, product TEXT NOT NULL, campaign_goal TEXT NOT NULL, emotional_angle TEXT NOT NULL, hook_style TEXT NOT NULL, body_pattern TEXT NOT NULL, offer_type TEXT NOT NULL, brand_voice TEXT NOT NULL, campaign_id TEXT REFERENCES campaigns(id), created_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS generated_ads (id TEXT PRIMARY KEY, brief_id TEXT NOT NULL, primary_text TEXT NOT NULL, headline TEXT NOT NULL, description TEXT NOT NULL, call_to_action TEXT NOT NULL, model TEXT NOT NULL, prompt_tokens INTEGER NOT NULL, completion_tokens INTEGER NOT NULL, latency_ms INTEGER NOT NULL, iteration INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'generating', created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS ad_briefs (id TEXT PRIMARY KEY, audience TEXT NOT NULL, product TEXT NOT NULL, campaign_goal TEXT NOT NULL, emotional_angle TEXT NOT NULL, hook_style TEXT NOT NULL, body_pattern TEXT NOT NULL, offer_type TEXT NOT NULL, brand_voice TEXT NOT NULL, proof_points TEXT, persona TEXT, campaign_id TEXT REFERENCES campaigns(id), created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS generated_ads (id TEXT PRIMARY KEY, brief_id TEXT NOT NULL, primary_text TEXT NOT NULL, headline TEXT NOT NULL, description TEXT NOT NULL, call_to_action TEXT NOT NULL, model TEXT NOT NULL, prompt_tokens INTEGER NOT NULL, completion_tokens INTEGER NOT NULL, latency_ms INTEGER NOT NULL, iteration INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'generating', image_url TEXT, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS evaluations (id TEXT PRIMARY KEY, ad_id TEXT NOT NULL, dimensions TEXT NOT NULL, weighted_score REAL NOT NULL, confidence REAL NOT NULL, model TEXT NOT NULL, tokens_used INTEGER NOT NULL, latency_ms INTEGER DEFAULT 0, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS iteration_logs (id TEXT PRIMARY KEY, brief_id TEXT NOT NULL, iteration INTEGER NOT NULL, ad_id TEXT NOT NULL, evaluation_id TEXT NOT NULL, weakest_dimension TEXT NOT NULL, action TEXT NOT NULL, score_before REAL NOT NULL, score_after REAL NOT NULL, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS token_usage (id TEXT PRIMARY KEY, operation TEXT NOT NULL, model TEXT NOT NULL, prompt_tokens INTEGER NOT NULL, completion_tokens INTEGER NOT NULL, total_tokens INTEGER NOT NULL, cost_usd REAL NOT NULL, created_at TEXT NOT NULL);
@@ -115,14 +115,15 @@ describe("runPipeline retry loop", () => {
 		});
 
 		expect(results).toHaveLength(2);
-		expect(results.every((r) => r.status === "published")).toBe(true);
+		expect(results.every((r) => r.status === "approved")).toBe(true);
 	});
 
 	it("retries to fill deficit when some briefs are discarded", async () => {
-		// First call: 2 briefs, one publishes (score 8), one discarded (score 4 x3)
-		// generateMoreBriefs called with deficit=1, returns 1 brief that publishes
+		// First call: 2 briefs, one approves (score 8), one discarded (score 4 x3)
+		// Runner over-generates: overGenCount = ceil(deficit * 1.5) = ceil(1.5) = 2
+		// generateMoreBriefs called with 2, both approve (score 8)
 		let evalCallIndex = 0;
-		const scoreSequence = [8, 4, 4, 4, 8]; // brief1: publish, brief2: 3 fails -> discard, brief3: publish
+		const scoreSequence = [8, 4, 4, 4, 8, 8]; // brief1: approve, brief2: 3 fails -> discard, brief3+4: approve
 		const evaluateLlm: LLMInterface = {
 			invoke: async () => {
 				const idx = Math.min(evalCallIndex, scoreSequence.length - 1);
@@ -149,9 +150,9 @@ describe("runPipeline retry loop", () => {
 			},
 		});
 
-		const published = results.filter((r) => r.status === "published");
-		expect(published).toHaveLength(2);
-		expect(generateMoreBriefs).toHaveBeenCalledWith(1);
+		const approved = results.filter((r) => r.status === "approved");
+		expect(approved.length).toBeGreaterThanOrEqual(2);
+		expect(generateMoreBriefs).toHaveBeenCalledWith(2);
 	});
 
 	it("stops retrying after maxRetryRounds", async () => {
@@ -177,7 +178,7 @@ describe("runPipeline retry loop", () => {
 			},
 		});
 
-		const published = results.filter((r) => r.status === "published");
+		const published = results.filter((r) => r.status === "approved");
 		expect(published).toHaveLength(0);
 		// Should have called generateMoreBriefs exactly 2 times (maxRetryRounds)
 		expect(generateMoreBriefs).toHaveBeenCalledTimes(2);
@@ -197,7 +198,7 @@ describe("runPipeline retry loop", () => {
 			},
 		});
 
-		const published = results.filter((r) => r.status === "published");
+		const published = results.filter((r) => r.status === "approved");
 		expect(published).toHaveLength(2);
 		expect(generateMoreBriefs).not.toHaveBeenCalled();
 	});

@@ -44,6 +44,8 @@ function createTestDb() {
 			body_pattern TEXT NOT NULL,
 			offer_type TEXT NOT NULL,
 			brand_voice TEXT NOT NULL,
+			proof_points TEXT,
+			persona TEXT,
 			campaign_id TEXT REFERENCES campaigns(id),
 			created_at TEXT NOT NULL
 		);
@@ -61,6 +63,7 @@ function createTestDb() {
 			latency_ms INTEGER NOT NULL,
 			iteration INTEGER NOT NULL,
 			status TEXT NOT NULL DEFAULT 'generating',
+			image_url TEXT,
 			created_at TEXT NOT NULL
 		);
 

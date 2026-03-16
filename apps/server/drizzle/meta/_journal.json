@@ -12,6 +12,20 @@
     {
       "idx": 1,
       "version": "6",
+      "when": 1773109989863,
+      "tag": "0001_add_image_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1773110089863,
+      "tag": "0002_add_persona",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
       "when": 1773196289863,
       "tag": "0003_add_eval_latency",
       "breakpoints": true
