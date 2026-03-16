@@ -11,7 +11,7 @@ import {
 } from "recharts";
 
 interface TrendChartProps {
-	data: Record<string, unknown>[];
+	data: object[];
 	xKey?: string;
 	dataKey?: string;
 	label?: string;
