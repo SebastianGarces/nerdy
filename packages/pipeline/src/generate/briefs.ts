@@ -1,4 +1,6 @@
 import type { AdBrief } from "../types/index.js";
+import { PERSONA_IDS } from "./personas.js";
+import { getProofPoints } from "./proof-points.js";
 
 const AUDIENCES = ["parent", "student", "family"] as const;
 const GOALS = ["awareness", "conversion"] as const;
@@ -15,10 +17,10 @@ const BODIES = [
 	"stat-context-offer",
 ] as const;
 const OFFERS = [
-	"Free consultation",
+	"Free diagnostic",
 	"Free practice test",
-	"First session free",
-	"14-day free trial",
+	"Book Diagnostic",
+	"Talk to an SAT specialist",
 ] as const;
 
 const BRAND_VOICE = [
@@ -31,6 +33,7 @@ const PRODUCT = "Varsity Tutors";
 
 function generateAllCombinations(): AdBrief[] {
 	const combos: AdBrief[] = [];
+	let personaIndex = 0;
 	for (const audience of AUDIENCES) {
 		for (const campaignGoal of GOALS) {
 			for (const emotionalAngle of EMOTIONS) {
@@ -46,7 +49,10 @@ function generateAllCombinations(): AdBrief[] {
 								bodyPattern,
 								offerType,
 								brandVoice: [...BRAND_VOICE],
+								proofPoints: getProofPoints(3),
+								persona: PERSONA_IDS[personaIndex % PERSONA_IDS.length],
 							});
+							personaIndex++;
 						}
 					}
 				}

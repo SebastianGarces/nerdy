@@ -21,17 +21,36 @@ Varsity Tutors brand voice is:
 
 - **1-3 (Poor)**: Fundamental issues. Confusing, off-brand, missing key elements, or actively harmful to brand perception.
 - **4-6 (Below Average)**: Some merit but significant weaknesses. May be unclear, generic, or tonally inconsistent.
-- **7-8 (Good)**: Effective and on-brand with only minor issues. Communicates value clearly and connects with the audience.
-- **9-10 (Excellent)**: Compelling, perfectly on-brand, and highly effective. Would stand out in a competitive ad landscape.
+- **7-8 (Good)**: Strong, publishable copy. Specific claims, solid craft, clear structure. The hook grabs attention and the CTA feels earned. Minor imperfections acceptable.
+- **8-9 (Very Good)**: Publication-ready with genuine craft. Uses an effective structural pattern (countdown, before/after, logical proof), includes mechanism specificity (HOW not just WHAT), and every claim has conditions. The ad couldn't belong to any other brand.
+- **9-10 (Excellent)**: Exceptional. Innovative structure, perfect emotional arc, every word load-bearing. Would outperform 95% of competitor ads.
 
 ## Scoring Guidelines
 
 - **Be a tough critic.** Most first-draft ads are mediocre. A score of 7+ should be reserved for genuinely strong copy that you would approve for a paid campaign without changes.
 - **Penalize generic content.** If the ad could apply to any tutoring company by swapping the brand name, cap that dimension at 6. Specificity and differentiation are required for scores above 6.
 - **Penalize vague value propositions.** "We help students succeed" or similar platitudes without a concrete, measurable claim should score 5 or below on valueProposition.
-- **Penalize weak CTAs.** Generic CTAs like "Learn More" or "Sign Up" that don't connect to the offer should score 5 or below on callToAction.
+- **Evaluate CTAs in context.** Facebook/Instagram ads have limited button options (Get Started, Learn More, Book Now, Sign Up). The button text alone doesn't determine the score — evaluate whether the ad's body copy creates a clear, urgent path to action. A standard button with strong urgency in the primary text can score 7. To score 8+, the CTA must feel like the inevitable next step — the entire ad builds toward it.
 - **Match the brief precisely.** If the ad doesn't clearly reflect the requested emotional angle, hook style, or body pattern, penalize the relevant dimensions by at least 2 points.
-- **Average first-draft quality is 5-6, not 7-8.** A score of 5-6 means "functional but needs iteration" — this is the expected range for initial attempts. Only ads with genuine craft, specificity, and emotional resonance should reach 7+.
+- **Average first-draft quality is 5-6, not 7-8.** A score of 5-6 means "functional but needs iteration" — this is the expected range for initial attempts. Only ads with genuine craft, specificity, and emotional resonance should reach 7+. Second and third iterations should aim for 7.5-8.5 — structural improvements and specific claims can lift ads significantly.
+- **8 is achievable, not rare.** An ad that combines a specific structural pattern (countdown, before/after, logical proof), conditional claims with real numbers ("16 sessions → 200+ points"), and parent-language tone ("your child" not "your student") should score 8 on most dimensions. Don't treat 8 as exceptional — treat it as "did everything right." Reserve 9+ for ads that make you want to click immediately.
+- **Numbers are baseline, not a bonus.** Specific numbers are a baseline requirement, not a differentiator. An ad with numbers that are generic or unsubstantiated (e.g., "thousands of students") should still score 5-6 on valueProposition. Only ads where the numbers are specific, plausible, and tightly integrated into the argument deserve 7+.
+- **Reward short, punchy structure.** Ads using sentence fragments and logical/mathematical build-up (like the Example 1 countdown pattern) should score higher on clarity and emotionalResonance than ads with long, flowing paragraphs.
+- **Penalize numberless ads.** If the ad contains zero concrete numbers or statistics, cap valueProposition at 5 and emotionalResonance at 6.
+- **Clarity rewards structure.** A clear message with an effective structural pattern (countdown, question-answer, before/after) should score 8+. A clear message with decent rhythm but no special structure can still score 7.
+- **Brand voice is about tone, not keywords.** The ad doesn't need to say "empowering" — it needs to FEEL empowering through its claims and tone. Generic motivational language that could belong to any brand caps at 6. To score 7+, the ad must have a distinctly Varsity Tutors voice — confident, specific, and results-oriented in a way that couldn't be mistaken for a competitor.
+- **Emotional resonance requires specificity.** An ad that names a generic pain point ("struggling in school") without making it vivid or personal caps at 6. To score 7+, the emotional hook must be specific enough that the reader thinks "that's exactly my situation" (e.g., "3.8 GPA but 1180 SAT"). Score 8+ only when the emotional arc builds across the entire ad.
+
+## Varsity Tutors Anti-Pattern Penalties
+
+These penalties reflect explicit brand guidelines from Varsity Tutors. Apply them strictly.
+
+- **"Your student" penalty**: If the ad uses "your student" instead of "your child", cap brandVoice at 5. Parents say "my child", not "my student".
+- **Fake scarcity penalty**: If the ad uses fake urgency ("spots filling fast", "limited enrollment", "secure their spot", "don't miss out"), cap brandVoice at 5 AND emotionalResonance at 5. Real urgency comes from test dates and deadlines, not manufactured pressure.
+- **Corporate speak penalty**: If the ad uses corporate/marketing language ("unlock potential", "maximize score potential", "tailored support", "custom strategies", "growth areas", "dream college within reach"), cap brandVoice at 5. Parents don't talk like marketers.
+- **"Online tutoring" penalty**: If the ad positions Varsity Tutors as "online tutoring", cap brandVoice at 5. Parents will dismiss online tutoring before reading the benefits.
+- **Reward mechanism specificity**: Ads that describe HOW the tutoring works (built-in calculator tools, section scoring mechanics, diagnostic-driven plans) should score higher on valueProposition than ads that just say "personalized" or "expert".
+- **Reward conditional claims**: "16 sessions → 200+ points" is more credible and should score higher than "gain 200 points" on valueProposition. Claims with conditions (time, sessions, practice) are always stronger.
 
 ## Few-Shot Examples
 

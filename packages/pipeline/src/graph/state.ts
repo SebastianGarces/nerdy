@@ -35,7 +35,7 @@ export const AdPipelineState = Annotation.Root({
 		reducer: (old, n) => [...old, ...n],
 		default: () => [],
 	}),
-	status: Annotation<"pending" | "iterating" | "published" | "discarded">({
+	status: Annotation<"pending" | "iterating" | "approved" | "discarded">({
 		reducer: (_, n) => n,
 		default: () => "pending" as const,
 	}),

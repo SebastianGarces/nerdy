@@ -1,6 +1,11 @@
 "use client";
 
-import type { Ad, DimensionScore, Evaluation } from "@/lib/api";
+import {
+	type Ad,
+	type DimensionScore,
+	type Evaluation,
+	useGenerateImage,
+} from "@/lib/api";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
@@ -37,6 +42,7 @@ export function AdDetailDialog({
 		return () => window.removeEventListener("keydown", handler);
 	}, [onClose]);
 
+	const generateImage = useGenerateImage(ad.id);
 	const dimensions = (evaluation?.dimensions ?? []) as DimensionScore[];
 
 	const overlay = (
@@ -79,7 +85,12 @@ export function AdDetailDialog({
 						className="hidden shrink-0 self-center p-5 sm:block"
 						style={{ width: 280 }}
 					>
-						<CreativeCardContent ad={ad} evaluation={evaluation} />
+						<CreativeCardContent
+							ad={ad}
+							evaluation={evaluation}
+							onGenerateImage={() => generateImage.mutate()}
+							isGeneratingImage={generateImage.isPending}
+						/>
 					</div>
 
 					{/* Right: Scores panel — fades in after the layout animation lands */}

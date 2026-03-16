@@ -2,6 +2,7 @@ import {
 	adBriefs,
 	campaigns,
 	evaluations,
+	generateBriefs,
 	generatedAds,
 	promptToBriefs,
 	runPipeline,
@@ -38,14 +39,15 @@ export function campaignRoutes(db: AppDatabase) {
 						process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
 				};
 
-				// Generate briefs from prompt via LLM
-				const briefs = await promptToBriefs(prompt, count, config);
+				set.status = 202;
 
-				// Run pipeline in background (fire-and-forget)
-				// Pipeline runner inserts briefs with campaignId
-				runPipeline(briefs, config, db, {
+				// Generate seed briefs instantly (no LLM call) and run pipeline
+				const seedBriefs = generateBriefs(count);
+				runPipeline(seedBriefs, config, db, {
 					campaignId,
+					campaignPrompt: prompt,
 					targetCount: count,
+					maxRetryRounds: 5,
 					generateMoreBriefs: (n) => promptToBriefs(prompt, n, config),
 				})
 					.then(async () => {
@@ -61,7 +63,6 @@ export function campaignRoutes(db: AppDatabase) {
 							.where(eq(campaigns.id, campaignId));
 					});
 
-				set.status = 202;
 				return { id: campaignId, status: "generating" };
 			},
 			{
@@ -275,20 +276,23 @@ export function campaignRoutes(db: AppDatabase) {
 						process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
 				};
 
-				// Generate briefs from prompt via LLM
-				const briefs = await promptToBriefs(campaign.prompt, count, config);
-
 				// Update status
 				await db
 					.update(campaigns)
 					.set({ status: "generating" })
 					.where(eq(campaigns.id, params.id));
 
-				// Pipeline runner inserts briefs with campaignId
-				runPipeline(briefs, config, db, {
+				set.status = 202;
+
+				// Generate seed briefs instantly (no LLM call) and run pipeline
+				const seedBriefs = generateBriefs(count);
+				runPipeline(seedBriefs, config, db, {
 					campaignId: params.id,
+					campaignPrompt: campaign.prompt,
 					targetCount: count,
-					generateMoreBriefs: (n) => promptToBriefs(campaign.prompt, n, config),
+					maxRetryRounds: 5,
+					generateMoreBriefs: (n) =>
+						promptToBriefs(campaign.prompt, n, config),
 				})
 					.then(async () => {
 						await db
@@ -303,7 +307,6 @@ export function campaignRoutes(db: AppDatabase) {
 							.where(eq(campaigns.id, params.id));
 					});
 
-				set.status = 202;
 				return { id: params.id, status: "generating" };
 			},
 			{

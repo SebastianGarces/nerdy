@@ -139,7 +139,7 @@ function competitorAdToGeneratedAd(ad: CompetitorAd): GeneratedAd {
 			latencyMs: 0,
 		},
 		iteration: 0,
-		status: "published",
+		status: "approved",
 		createdAt: ad.scrapedAt,
 	};
 }

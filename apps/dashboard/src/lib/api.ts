@@ -24,6 +24,7 @@ export interface Ad {
 	status: string;
 	iteration: number;
 	createdAt: string;
+	imageUrl?: string | null;
 }
 
 export interface DimensionScore {
@@ -91,6 +92,22 @@ interface StatsResponse extends Stats {}
 
 interface TrendsResponse {
 	trends: Trend[];
+}
+
+export function useGenerateImage(adId: string) {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: () =>
+			fetchApi<{ imageUrl: string }>(`/api/ads/${adId}/generate-image`, {
+				method: "POST",
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["ad", adId] });
+			queryClient.invalidateQueries({ queryKey: ["ads"] });
+			queryClient.invalidateQueries({ queryKey: ["campaign"] });
+			queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+		},
+	});
 }
 
 export function useAds(params?: {

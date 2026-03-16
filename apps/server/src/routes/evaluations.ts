@@ -114,7 +114,7 @@ export function evaluationRoutes(db: AppDatabase) {
 			const [publishedResult] = await db
 				.select({ count: sql<number>`count(*)` })
 				.from(generatedAds)
-				.where(sql`${generatedAds.status} = 'published'`);
+				.where(sql`${generatedAds.status} = 'approved'`);
 
 			const [avgScoreResult] = await db
 				.select({

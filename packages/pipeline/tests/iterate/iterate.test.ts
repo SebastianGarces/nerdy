@@ -125,7 +125,7 @@ describe("shouldRetry", () => {
 		const state = makeState({
 			iterationCount: 1,
 			maxIterations: 3,
-			status: "published",
+			status: "approved",
 		});
 
 		expect(shouldRetry(state)).toBe(false);

@@ -26,7 +26,7 @@ export async function runPipeline(
 	const concurrency = options?.concurrency ?? 3;
 	const maxIterations = options?.maxIterations ?? 3;
 	const targetCount = options?.targetCount;
-	const maxRetryRounds = options?.maxRetryRounds ?? 3;
+	const maxRetryRounds = options?.maxRetryRounds ?? 5;
 
 	const app = createAdPipelineGraph(db, options?.nodeOptions);
 	const allResults: AdPipelineStateType[] = [];
@@ -55,6 +55,10 @@ export async function runPipeline(
 				bodyPattern: brief.bodyPattern,
 				offerType: brief.offerType,
 				brandVoice: JSON.stringify(brief.brandVoice),
+				proofPoints: brief.proofPoints
+					? JSON.stringify(brief.proofPoints)
+					: null,
+				persona: brief.persona ?? null,
 				campaignId: options?.campaignId ?? null,
 				createdAt: new Date().toISOString(),
 			});
@@ -75,13 +79,21 @@ export async function runPipeline(
 				batch.map((input) => app.invoke(input)),
 			);
 			allResults.push(...batchResults);
+
+			// Stop mid-batch if we've hit the target
+			if (targetCount) {
+				const approvedSoFar = allResults.filter(
+					(r) => r.status === "approved",
+				).length;
+				if (approvedSoFar >= targetCount) break;
+			}
 		}
 
 		// If no target count set, single-pass (backwards compatible)
 		if (!targetCount) break;
 
 		const publishedCount = allResults.filter(
-			(r) => r.status === "published",
+			(r) => r.status === "approved",
 		).length;
 		if (publishedCount >= targetCount) break;
 
@@ -89,7 +101,9 @@ export async function runPipeline(
 		retryRound++;
 
 		const deficit = targetCount - publishedCount;
-		currentBriefs = await options.generateMoreBriefs(deficit);
+		const overGenCount = Math.ceil(deficit * 1.5);
+		currentBriefs = await options.generateMoreBriefs(overGenCount);
+		if (currentBriefs.length === 0) break;
 	}
 
 	return allResults;

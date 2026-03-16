@@ -226,7 +226,7 @@ describe("generateAd", () => {
 		expect(userMessage?.content).toContain("Old headline");
 		expect(userMessage?.content).toContain("valueProposition");
 		expect(userMessage?.content).toContain("Weak value prop");
-		expect(userMessage?.content).toContain("WEAKEST DIMENSION");
+		expect(userMessage?.content).toContain("IMPROVEMENT TECHNIQUES");
 	});
 
 	test("generation prompt includes brief parameters", async () => {

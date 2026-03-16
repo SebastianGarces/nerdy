@@ -25,7 +25,7 @@ export function createAdPipelineGraph(
 		.addEdge("generate", "evaluate")
 		.addEdge("evaluate", "decide")
 		.addConditionalEdges("decide", (state) => {
-			if (state.status === "published") return "publish";
+			if (state.status === "approved") return "publish";
 			if (state.status === "discarded") return "discard";
 			return "regenerate";
 		})

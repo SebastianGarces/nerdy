@@ -8,6 +8,7 @@ CREATE TABLE `ad_briefs` (
 	`body_pattern` text NOT NULL,
 	`offer_type` text NOT NULL,
 	`brand_voice` text NOT NULL,
+	`proof_points` text,
 	`campaign_id` text,
 	`created_at` text NOT NULL,
 	FOREIGN KEY (`campaign_id`) REFERENCES `campaigns`(`id`) ON UPDATE no action ON DELETE no action

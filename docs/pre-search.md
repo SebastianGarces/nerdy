@@ -286,7 +286,7 @@ interface AdGraphState {
   iteration: number;                 // Current iteration count
   maxIterations: number;             // Max retries (default: 3)
   weakestDimension: string | null;   // Identified weak point for targeted regen
-  status: 'generating' | 'evaluating' | 'improving' | 'published' | 'discarded';
+  status: 'generating' | 'evaluating' | 'improving' | 'approved' | 'discarded';
   tokenUsage: TokenUsage;           // Running token count for ROI
 }
 ```
@@ -345,7 +345,7 @@ LANGCHAIN_PROJECT=nerdy-ad-engine
 ### Benefits for This Project
 
 1. **Debug evaluation quality**: See exactly what the LLM-as-judge is reasoning about each dimension
-2. **Track improvement**: Compare traces across iteration cycles to verify quality gains
+2. **Track improvement**: Compare traces across itercleation cycles to verify quality gains
 3. **Cost visibility**: Token usage per ad, per iteration, per batch — feeds into ROI tracking
 4. **Decision log evidence**: Traces serve as proof of iteration methodology for the submission
 5. **Identify patterns**: Which prompts produce higher scores? Which dimensions are hardest to improve?

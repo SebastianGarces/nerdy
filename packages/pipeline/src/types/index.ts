@@ -26,7 +26,7 @@ export const BodyPattern = z.enum([
 ]);
 export type BodyPattern = z.infer<typeof BodyPattern>;
 
-export const AdStatus = z.enum(["generating", "published", "discarded"]);
+export const AdStatus = z.enum(["generating", "approved", "discarded"]);
 export type AdStatus = z.infer<typeof AdStatus>;
 
 export const EvaluationDimension = z.enum([
@@ -66,6 +66,8 @@ export const AdBriefSchema = z.object({
 	bodyPattern: BodyPattern,
 	offerType: z.string().min(1),
 	brandVoice: z.array(z.string().min(1)).min(1),
+	proofPoints: z.array(z.string().min(1)).optional(),
+	persona: z.string().optional(),
 });
 
 export const DimensionScoreSchema = z.object({
@@ -184,5 +186,5 @@ export interface AdGraphState {
 	maxIterations: number;
 	weakestDimension: EvaluationDimension | null;
 	tokenUsage: TokenUsageRecord[];
-	status: "pending" | "iterating" | "published" | "discarded";
+	status: "pending" | "iterating" | "approved" | "discarded";
 }

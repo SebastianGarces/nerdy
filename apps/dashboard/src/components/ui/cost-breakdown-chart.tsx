@@ -45,10 +45,10 @@ export function CostBreakdownChart({ data }: CostBreakdownChartProps) {
 					</Pie>
 					<Tooltip
 						contentStyle={{
-							backgroundColor: "#171717",
-							border: "1px solid #404040",
+							backgroundColor: "#e5e5e5",
+							border: "1px solid #d4d4d4",
 							borderRadius: "8px",
-							color: "#f5f5f5",
+							color: "#171717",
 						}}
 						formatter={(value: number) => [`$${value.toFixed(4)}`, "Cost"]}
 					/>

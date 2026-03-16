@@ -21,26 +21,6 @@ export default function DashboardPage() {
 
 			<PromptInput />
 
-			{/* Recent Campaigns */}
-			<div>
-				<h2 className="mb-4 text-lg font-semibold">Recent Campaigns</h2>
-				{campaignsLoading ? (
-					<div className="flex h-32 items-center justify-center">
-						<Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
-					</div>
-				) : campaignsData?.campaigns.length === 0 ? (
-					<div className="rounded-xl border border-dashed border-neutral-700 py-12 text-center text-sm text-neutral-500">
-						No campaigns yet. Create your first one above!
-					</div>
-				) : (
-					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-						{campaignsData?.campaigns.map((c) => (
-							<CampaignCard key={c.id} campaign={c} />
-						))}
-					</div>
-				)}
-			</div>
-
 			{/* Compact Stats */}
 			{statsData && (
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -66,6 +46,26 @@ export default function DashboardPage() {
 					/>
 				</div>
 			)}
+
+			{/* Recent Campaigns */}
+			<div>
+				<h2 className="mb-4 text-lg font-semibold">Recent Campaigns</h2>
+				{campaignsLoading ? (
+					<div className="flex h-32 items-center justify-center">
+						<Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+					</div>
+				) : campaignsData?.campaigns.length === 0 ? (
+					<div className="rounded-xl border border-dashed border-neutral-700 py-12 text-center text-sm text-neutral-500">
+						No campaigns yet. Create your first one above!
+					</div>
+				) : (
+					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+						{campaignsData?.campaigns.map((c) => (
+							<CampaignCard key={c.id} campaign={c} />
+						))}
+					</div>
+				)}
+			</div>
 		</div>
 	);
 }

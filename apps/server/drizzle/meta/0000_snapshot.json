@@ -70,6 +70,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "proof_points": {
+          "name": "proof_points",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "campaign_id": {
           "name": "campaign_id",
           "type": "text",

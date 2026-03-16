@@ -11,8 +11,16 @@ import {
 import { evaluateAd } from "../evaluate/index.js";
 import type { LLMInterface } from "../evaluate/index.js";
 import { generateAd } from "../generate/index.js";
+import { getPersona } from "../generate/personas.js";
 import { diagnoseWeakness, shouldRetry } from "../iterate/index.js";
 import type { AdPipelineStateType } from "./state.js";
+
+function buildPersonaContext(personaId?: string): string | undefined {
+	if (!personaId) return undefined;
+	const persona = getPersona(personaId);
+	if (!persona) return undefined;
+	return `${persona.name}: ${persona.description}\nPsychology: ${persona.psychology}\nSample hooks for inspiration: ${persona.sampleHooks.slice(0, 3).join(" | ")}`;
+}
 
 export const QUALITY_THRESHOLD = 7.5;
 
@@ -34,6 +42,7 @@ export function createNodes(
 			briefId: state.briefId,
 			llm: options?.generateLlm,
 			campaignPrompt: state.campaignPrompt ?? undefined,
+			personaContext: buildPersonaContext(state.brief.persona),
 		});
 
 		await db.insert(generatedAds).values({
@@ -142,7 +151,7 @@ export function createNodes(
 		}
 
 		if (latestEvaluation.weightedScore >= QUALITY_THRESHOLD) {
-			return { status: "published" };
+			return { status: "approved" };
 		}
 
 		const canRetry = shouldRetry({
@@ -177,7 +186,7 @@ export function createNodes(
 
 		await db
 			.update(generatedAds)
-			.set({ status: "published" })
+			.set({ status: "approved" })
 			.where(eq(generatedAds.id, ad.id));
 
 		const latestEvaluation = state.evaluations[state.evaluations.length - 1];

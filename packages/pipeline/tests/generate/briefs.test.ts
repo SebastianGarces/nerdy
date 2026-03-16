@@ -120,4 +120,30 @@ describe("generateBriefs", () => {
 		const briefs = generateBriefs(1152);
 		expect(briefs).toHaveLength(1152);
 	});
+
+	test("all briefs have a persona assigned", () => {
+		const briefs = generateBriefs(50);
+		for (const brief of briefs) {
+			expect(brief.persona).toBeString();
+			expect(brief.persona?.length).toBeGreaterThan(0);
+		}
+	});
+
+	test("all briefs have proof points from real data", () => {
+		const briefs = generateBriefs(20);
+		for (const brief of briefs) {
+			expect(brief.proofPoints).toBeDefined();
+			expect(brief.proofPoints?.length).toBe(3);
+			for (const point of brief.proofPoints ?? []) {
+				expect(point).toBeString();
+				expect(point.length).toBeGreaterThan(0);
+			}
+		}
+	});
+
+	test("personas cycle across all 7 values", () => {
+		const briefs = generateBriefs(100);
+		const personas = new Set(briefs.map((b) => b.persona));
+		expect(personas.size).toBe(7);
+	});
 });

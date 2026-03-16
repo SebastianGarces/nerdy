@@ -16,10 +16,10 @@ export default function CampaignDetailPage({
 }) {
 	const { id } = use(params);
 	const { data, isLoading, error } = useCampaign(id);
-	const [filter, setFilter] = useState<"all" | "published" | "discarded">(
-		"all",
-	);
-	const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
+	const [filter, setFilter] = useState<
+		"all" | "generating" | "approved" | "discarded"
+	>("all");
+	const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
 
 	if (isLoading) {
 		return (
@@ -46,6 +46,12 @@ export default function CampaignDetailPage({
 
 	const filteredAds =
 		filter === "all" ? ads : ads.filter((ad: Ad) => ad.status === filter);
+
+	const sortedAds = [...filteredAds].sort((a, b) => {
+		if (a.status === "generating" && b.status !== "generating") return 1;
+		if (a.status !== "generating" && b.status === "generating") return -1;
+		return 0;
+	});
 
 	const statusColor =
 		campaign.status === "generating"
@@ -94,7 +100,10 @@ export default function CampaignDetailPage({
 
 			{/* Filter */}
 			<div className="flex gap-2">
-				{(["all", "published", "discarded"] as const).map((value) => (
+				{(campaign.status === "generating"
+					? (["all", "generating", "approved", "discarded"] as const)
+					: (["all", "approved", "discarded"] as const)
+				).map((value) => (
 					<button
 						key={value}
 						type="button"
@@ -112,7 +121,7 @@ export default function CampaignDetailPage({
 
 			{/* Creative gallery */}
 			<LayoutGroup>
-				{filteredAds.length === 0 ? (
+				{sortedAds.length === 0 ? (
 					<div className="rounded-xl border border-dashed border-neutral-700 py-16 text-center">
 						{campaign.status === "generating" ? (
 							<div className="space-y-2">
@@ -135,27 +144,32 @@ export default function CampaignDetailPage({
 							gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
 						}}
 					>
-						{filteredAds.map((ad: Ad) => (
+						{sortedAds.map((ad: Ad) => (
 							<CreativeCard
 								key={ad.id}
 								ad={ad}
 								evaluation={evalMap.get(ad.id)}
 								mode="button"
 								layoutId={`card-${ad.id}`}
-								onClick={() => setSelectedAd(ad)}
+								onClick={() => setSelectedAdId(ad.id)}
 							/>
 						))}
 					</div>
 				)}
 
 				<AnimatePresence>
-					{selectedAd && (
-						<AdDetailDialog
-							ad={selectedAd}
-							evaluation={evalMap.get(selectedAd.id)}
-							onClose={() => setSelectedAd(null)}
-						/>
-					)}
+					{selectedAdId &&
+						(() => {
+							const freshAd = ads.find((a: Ad) => a.id === selectedAdId);
+							if (!freshAd) return null;
+							return (
+								<AdDetailDialog
+									ad={freshAd}
+									evaluation={evalMap.get(freshAd.id)}
+									onClose={() => setSelectedAdId(null)}
+								/>
+							);
+						})()}
 				</AnimatePresence>
 			</LayoutGroup>
 		</div>

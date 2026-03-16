@@ -32,6 +32,8 @@ export interface GenerateAdOptions {
 	llm?: ChatOpenAI;
 	/** Optional campaign prompt for additional context */
 	campaignPrompt?: string;
+	/** Optional persona context for targeted ad generation */
+	personaContext?: string;
 }
 
 const MODEL = "google/gemini-2.0-flash-001";
@@ -59,13 +61,12 @@ export async function generateAd(
 	});
 
 	const userMessage = context
-		? buildRegenerationPrompt(
+		? buildRegenerationPrompt(brief, context.previousAd, context.evaluation)
+		: buildGenerationPrompt(
 				brief,
-				context.previousAd,
-				context.evaluation,
-				context.targetDimension,
-			)
-		: buildGenerationPrompt(brief, options.campaignPrompt);
+				options.campaignPrompt,
+				options.personaContext,
+			);
 
 	const startTime = performance.now();
 

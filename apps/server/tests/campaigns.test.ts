@@ -34,7 +34,7 @@ function seedCampaigns(sqlite: Database) {
 		VALUES ('brief-c1', 'parent', 'Varsity Tutors', 'conversion', 'aspiration', 'question', 'problem-agitate-solution', 'Free consultation', '["empowering"]', 'camp-1', '2026-01-01T00:00:00Z');
 
 		INSERT INTO generated_ads (id, brief_id, primary_text, headline, description, call_to_action, model, prompt_tokens, completion_tokens, latency_ms, iteration, status, created_at)
-		VALUES ('ad-c1', 'brief-c1', 'Primary text', 'Headline', 'Description', 'Learn More', 'gemini', 100, 50, 500, 1, 'published', '2026-01-01T00:00:00Z');
+		VALUES ('ad-c1', 'brief-c1', 'Primary text', 'Headline', 'Description', 'Learn More', 'gemini', 100, 50, 500, 1, 'approved', '2026-01-01T00:00:00Z');
 
 		INSERT INTO evaluations (id, ad_id, dimensions, weighted_score, confidence, model, tokens_used, created_at)
 		VALUES ('eval-c1', 'ad-c1', '[{"dimension":"clarity","score":8,"rationale":"Clear"}]', 8.0, 0.9, 'gemini', 200, '2026-01-01T00:00:00Z');

@@ -46,6 +46,8 @@ export const adBriefs = sqliteTable("ad_briefs", {
 	bodyPattern: text("body_pattern").notNull(),
 	offerType: text("offer_type").notNull(),
 	brandVoice: text("brand_voice").notNull(), // JSON stringified string[]
+	proofPoints: text("proof_points"), // JSON stringified string[] | null
+	persona: text("persona"), // persona id or null
 	campaignId: text("campaign_id").references(() => campaigns.id),
 	createdAt: text("created_at").notNull(),
 });
@@ -69,6 +71,7 @@ export const generatedAds = sqliteTable("generated_ads", {
 	latencyMs: integer("latency_ms").notNull(),
 	iteration: integer("iteration").notNull(),
 	status: text("status").notNull().default("generating"),
+	imageUrl: text("image_url"),
 	createdAt: text("created_at").notNull(),
 });
 

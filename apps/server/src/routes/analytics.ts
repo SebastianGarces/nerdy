@@ -39,7 +39,7 @@ export function analyticsRoutes(db: AppDatabase) {
 			const [publishedResult] = await db
 				.select({ count: sql<number>`count(*)` })
 				.from(generatedAds)
-				.where(sql`${generatedAds.status} = 'published'`);
+				.where(sql`${generatedAds.status} = 'approved'`);
 
 			const [tokenResult] = await db
 				.select({
@@ -54,7 +54,7 @@ export function analyticsRoutes(db: AppDatabase) {
 				})
 				.from(evaluations)
 				.innerJoin(generatedAds, sql`${evaluations.adId} = ${generatedAds.id}`)
-				.where(sql`${generatedAds.status} = 'published'`);
+				.where(sql`${generatedAds.status} = 'approved'`);
 
 			const [latencyResult] = await db
 				.select({ avg: sql<number>`avg(latency_ms)` })
