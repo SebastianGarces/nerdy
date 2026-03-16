@@ -10,11 +10,14 @@ Pipeline mature with 353 published ads across 9 campaigns. Dashboard polished wi
 - ADR 0005: quality threshold 7.5 + evaluator bias fix (tough-critic, temp 0, 3 few-shot)
 - Technical writeup updated with real DB stats (353 published, 98.6% pass rate, avg 7.66)
 - Progress.md and docs synced to current state
+- Latency tracking feature completed (eval latencyMs column, latency-summary + latency-over-time API endpoints, dashboard analytics section)
+- Migration journal fixed (was missing 0001, 0002 entries)
+- 7 personas, proof points library, VT writing rules (ADRs 0007, 0008)
 
 ## Quality Gates
 - Biome: 0 violations
 - TypeScript: 0 errors (all 3 workspaces)
-- Tests: 158 pass, 0 fail (16 test files)
+- Tests: 219 pass, 0 fail (26 test files)
 
 ## Key Architecture Notes
 - Root tsconfig is base-only — typecheck runs tsc per-workspace

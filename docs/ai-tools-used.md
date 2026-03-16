@@ -29,10 +29,11 @@
 - Varsity Tutors brand voice definition (empowering, knowledgeable, approachable, results-focused)
 - 5 evaluation dimensions with explicit weights: clarity (20%), value proposition (25%), CTA (20%), brand voice (15%), emotional resonance (20%)
 - 4-tier scoring rubric: 1-3 Poor, 4-6 Below Average, 7-8 Good, 9-10 Excellent
-- Two few-shot examples: a good ad (~8.0 score) and a poor ad (~4.0 score) with per-dimension scores and rationale
+- Three few-shot examples: a good ad (~7.8 VT ad), a mediocre ad (~6.0 Kumon ad), and a poor ad (~3.5 Tutor.com ad) -- all sourced from real competitor ads scraped from Meta Ad Library
 - Structured JSON output format enforced via Zod schema
+- Specificity penalty: ads without concrete numbers have their value proposition dimension capped at 5, incentivizing the generator to include specific claims
 
-**Iteration history**: The few-shot examples were designed to anchor scoring ranges and prevent score inflation. The two-example approach (good + poor) establishes both ends of the quality spectrum.
+**Iteration history**: The few-shot examples were designed to anchor scoring ranges and prevent score inflation. The three-example approach (good + mediocre + poor) establishes the full quality spectrum with real-world calibration data.
 
 ### Generation System Prompt
 
@@ -42,6 +43,8 @@
 - Varsity Tutors brand identity and key selling points (1-on-1 tutoring, expert tutors, all subjects K-12 through college, flexible scheduling)
 - Output format: primaryText (2-4 sentences), headline (5-10 words), description (1 sentence), callToAction (button text)
 - Instruction to match the brief's emotional angle, hook style, and body pattern
+- Mandatory writing rules enforcing specificity: require concrete numbers (percentages, timeframes, counts), max 12 words per sentence, mathematical/logical structure (before/after framing, if/then patterns), and a banned filler phrase list (e.g., "unlock your potential", "journey to success")
+- Proof point injection — if the brief includes `proofPoints`, the generator is instructed to weave them into the copy as concrete claims
 
 ### Regeneration Prompt
 
@@ -55,6 +58,16 @@
 
 **Design rationale**: By providing the full evaluation context, the model understands both what to fix and what to preserve. The explicit "do not sacrifice strengths" instruction addresses the common failure mode where improving one dimension degrades others.
 
+### Persona System
+
+**Purpose**: Generate audience-targeted briefs using 7 predefined personas.
+
+**Key elements**:
+- 7 personas covering the primary VT audience segments (e.g., anxious parent, ambitious student, comparison shopper)
+- Each persona includes demographic details, pain points, and messaging preferences
+- Brief generator selects appropriate personas based on campaign prompt
+- See [ADR 0008](../decisions/0008-integrate-vt-messaging-guidance.md)
+
 ### Brief Generation Prompt (promptToBriefs)
 
 **Purpose**: Generate structured ad briefs from a natural language campaign description.
@@ -63,4 +76,5 @@
 - Takes a freeform campaign prompt (e.g., "Back-to-school campaign targeting parents of high schoolers struggling with math")
 - Returns an array of AdBrief objects matching the schema: audience, campaignGoal, emotionalAngle, offerType, hookStyle, bodyPattern
 - Each brief is a unique combination tailored to the campaign description
+- Generates a `proofPoints` array per brief — 2-3 concrete numerical claims (e.g., "200+ point SAT improvement in 8 weeks") that seed the generator with specific numbers to use in ad copy
 - Falls back to matrix-based generateBriefs if the LLM call fails

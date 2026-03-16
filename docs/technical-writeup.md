@@ -8,7 +8,7 @@ The architecture is a Bun monorepo with three packages:
 
 - **packages/pipeline** -- Core pipeline containing the LangGraph-based generate-evaluate-iterate loop, Drizzle ORM schema (7 tables in SQLite), the evaluator with weighted scoring, the brief matrix generator, and a Playwright-based Meta Ad Library scraper for competitor analysis.
 - **apps/server** -- Elysia API serving ads, evaluations, briefs, and pipeline execution endpoints.
-- **apps/dashboard** -- Next.js 16 dashboard with Tailwind v4, Recharts for visualizing ad quality stats/trends/per-ad radar charts, and motion (framer-motion v12+) for shared layout animations.
+- **apps/dashboard** -- Next.js 15 dashboard with Tailwind v4, Recharts for visualizing ad quality stats/trends/per-ad radar charts, and motion (framer-motion v12+) for shared layout animations.
 
 ## Key Design Decisions
 
@@ -21,6 +21,10 @@ The architecture is a Bun monorepo with three packages:
 **Structured output via Zod**: Both generator and evaluator use `withStructuredOutput` to enforce typed JSON responses from the LLM, eliminating parsing failures and ensuring every evaluation includes all 5 dimensions.
 
 **Quality threshold & evaluator calibration** (see [ADR 0005](../decisions/0005-quality-threshold-and-evaluator-bias.md)): The initial 7.0 threshold with a lenient evaluator meant most ads passed on the first iteration, bypassing the self-healing loop. The fix was two-pronged: raise the publish threshold to 7.5, and add explicit tough-critic instructions to the evaluator prompt (penalize generic content, anchor scoring baseline at 5-6 for first drafts, set evaluator temperature to 0 for deterministic scoring). Three few-shot examples at ~8.0, ~6.0, and ~4.0 calibrate the scoring distribution.
+
+**Proof points & writing rules** (see [ADR 0007](../decisions/0007-proof-points-and-writing-rules.md)): Few-shot examples alone were insufficient to make the generator produce concrete, punchy ad copy — the model recognized patterns in examples but defaulted to generic platitudes. Three additions closed the gap: (1) an optional `proofPoints` field on briefs, where the brief generator seeds 2-3 concrete numerical claims per brief; (2) mandatory writing rules in the generator prompt enforcing specific numbers, short sentences (max 12 words), before/after framing, and banning filler phrases; (3) evaluator scoring guidelines that cap the value proposition dimension at 5 for ads without concrete numbers. Together these create a reinforcing loop where briefs supply specific material, the generator is constrained to use it, and the evaluator rewards the result.
+
+**Persona-driven generation** (see [ADR 0008](../decisions/0008-integrate-vt-messaging-guidance.md)): The system supports 7 audience personas covering primary VT audience segments (e.g., anxious parent, ambitious student, comparison shopper). Each persona includes demographic details, pain points, and messaging preferences. The brief generator selects appropriate personas based on campaign prompts, producing more targeted ad copy.
 
 **Single model via OpenRouter**: Gemini 2.0 Flash (`google/gemini-2.0-flash-001`) handles both generation (temperature 0.7) and evaluation (temperature 0) through OpenRouter, providing a cost-effective single-API approach.
 
@@ -40,9 +44,10 @@ The evaluation prompt includes three few-shot examples (a good ad scoring ~8.0, 
 
 - **Pipeline output**: 353 published ads from 358 briefs across 9 campaigns, with a 98.6% pass rate. Published ads average 7.66/10 weighted score (min 7.55, max 8.4). The 5 discarded ads averaged 7.09 — below the 7.5 threshold even after exhausting 3 iterations.
 - **Iteration effectiveness**: Average 1.6 iterations per brief. 158 ads (44%) published on the first iteration, 177 (50%) on the second, and 18 (5%) on the third. The self-healing loop successfully improves most ads within 2 iterations, targeting diagnosed weaknesses (most commonly emotional resonance and brand voice).
-- **Test coverage**: 158 tests across 16 test files covering types, generation, evaluation, iteration, graph, scraper, database, API routes, campaigns, brief generation, and token tracking.
+- **Test coverage**: 219 tests across 26 test files covering types, generation, evaluation, iteration, graph, scraper, database, API routes, campaigns, brief generation, and token tracking.
 - **Quality gates**: All three gates pass consistently -- Biome lint (zero violations), TypeScript strict mode (zero errors across 3 workspaces), and bun test (all passing).
 - **Brief matrix**: 1,152 unique brief combinations available via combinatorial generation, with LLM-powered `promptToBriefs` as the primary brief creation method for campaign-driven workflows.
+- **Latency tracking**: Latency tracking captures per-ad generation time and per-evaluation scoring time, with p50/p95 analytics and daily trend charts on the dashboard.
 - **Competitive calibration**: Evaluator calibrated against 63 scraped competitor ads from Meta Ad Library across 6 advertisers (Varsity Tutors, Kumon, Chegg, Tutor.com, Wyzant, Khan Academy). Ads were tiered by duration as a quality proxy (high: 65d avg, mid: 31d avg, low: 7d avg). Key finding: a negative correlation (-0.149) between ad duration and evaluator score reveals that the evaluator measures VT brand alignment rather than universal ad quality. VT ads scored highest (avg 5.31); long-running competitor ads scored lower (avg 4.48) despite real-world longevity. Franchise/spam ads correctly scored 1.0-1.6. Few-shot examples were updated from synthetic to real competitor ads. See [ADR 0006](../decisions/0006-calibration-with-duration-proxy.md).
 
 ## Limitations
