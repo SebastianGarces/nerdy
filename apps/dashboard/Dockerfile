@@ -12,6 +12,9 @@ COPY packages/pipeline packages/pipeline
 COPY apps/dashboard apps/dashboard
 COPY tsconfig.json ./
 
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 WORKDIR /app/apps/dashboard
 RUN bun run build
 
